@@ -295,6 +295,16 @@ export const MeuTreinoPage: React.FC = () => {
   }, [checkinAtual])
 
   useEffect(() => {
+    if (checkinAtual?.status !== "INICIADO") {
+      return
+    }
+
+    if (selectedDiaId !== checkinAtual.treinoDiaId) {
+      setSelectedDiaId(checkinAtual.treinoDiaId)
+    }
+  }, [checkinAtual, selectedDiaId])
+
+  useEffect(() => {
     if (!checkinAtual) {
       return
     }
@@ -448,11 +458,18 @@ export const MeuTreinoPage: React.FC = () => {
     return planoAtivo.dias.find((dia) => dia.id === selectedDiaId)
   }, [planoAtivo, selectedDiaId])
 
-  const isSelectedDiaSessionActive = !!(
-    selectedDia &&
-    checkinAtual &&
-    checkinAtual.treinoDiaId === selectedDia.id
-  )
+  const hasTreinoEmAndamento = checkinAtual?.status === "INICIADO"
+  const isSelectedDiaSessionActive =
+    hasTreinoEmAndamento && !!selectedDia && checkinAtual.treinoDiaId === selectedDia.id
+
+  const handleSelectDia = (diaId: string) => {
+    if (hasTreinoEmAndamento && diaId !== checkinAtual.treinoDiaId) {
+      showToast.error("Finalize o treino em andamento antes de visualizar outro dia.")
+      return
+    }
+
+    setSelectedDiaId(diaId)
+  }
 
   const dayNavigationItems = useMemo(
     () =>
@@ -613,7 +630,7 @@ export const MeuTreinoPage: React.FC = () => {
         <TreinoDayNavigator
           days={dayNavigationItems}
           selectedDayId={selectedDiaId}
-          onSelectDay={setSelectedDiaId}
+          onSelectDay={handleSelectDia}
           label="Dias do meu treino"
           mobileLabel="Dias do treino"
         />
@@ -627,12 +644,6 @@ export const MeuTreinoPage: React.FC = () => {
           >
             {selectedDia ? `Iniciar ${selectedDia.titulo}` : "Iniciar treino do dia"}
           </Button>
-          {checkinAtual && selectedDia && !isSelectedDiaSessionActive && (
-            <p className="mt-2 text-sm text-[color:var(--student-text-soft)]">
-              Você está vendo {selectedDia.titulo}. A sessão em andamento abaixo é de{" "}
-              {checkinAtual.treinoDia.titulo}.
-            </p>
-          )}
         </div>
       </Card>
 
