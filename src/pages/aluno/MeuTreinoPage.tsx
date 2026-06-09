@@ -717,6 +717,40 @@ export const MeuTreinoPage: React.FC = () => {
                       {item.series || "-"} séries • {item.repeticoes || "-"} reps
                       {item.cargaSugerida ? ` • carga sugerida: ${item.cargaSugerida} kg` : ""}
                     </p>
+                    {(item.exercicio.executionGifUrl || item.exercicio.equipmentImageUrl) && (
+                      <div className="grid grid-cols-1 gap-3 md:grid-cols-2 mt-3">
+                        {item.exercicio.executionGifUrl && (
+                          <div className="rounded-lg border border-[color:var(--app-success-border)] bg-[color:var(--app-success-surface)] overflow-hidden">
+                            <div className="px-3 py-2 border-b border-[color:var(--app-success-border)]">
+                              <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[color:var(--app-success)]">
+                                Execução
+                              </p>
+                            </div>
+                            <img
+                              src={item.exercicio.executionGifUrl}
+                              alt={`Demonstração de ${item.exercicio.nome}`}
+                              className="h-48 w-full object-cover"
+                              loading="lazy"
+                            />
+                          </div>
+                        )}
+                        {item.exercicio.equipmentImageUrl && (
+                          <div className="rounded-lg border border-[color:var(--app-success-border)] bg-[color:var(--app-success-surface)] overflow-hidden">
+                            <div className="px-3 py-2 border-b border-[color:var(--app-success-border)]">
+                              <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[color:var(--app-success)]">
+                                Aparelho
+                              </p>
+                            </div>
+                            <img
+                              src={item.exercicio.equipmentImageUrl}
+                              alt={`Aparelho usado em ${item.exercicio.nome}`}
+                              className="h-48 w-full object-cover"
+                              loading="lazy"
+                            />
+                          </div>
+                        )}
+                      </div>
+                    )}
                     {(item.metodo || item.observacoes) && (
                       <div className="mt-2 space-y-2">
                         {item.metodo && (
