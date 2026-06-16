@@ -44,11 +44,11 @@ export const BrandMark: React.FC<BrandMarkProps> = ({
       <img
         src="/logo.jpg"
         alt="Logo G-Force"
-        className={`${selectedSize.image} object-cover rounded-md border border-[color:var(--student-border)] ${imageClassName}`.trim()}
+        className={`${selectedSize.image} object-cover rounded-md border border-[color:var(--app-border)] ${imageClassName}`.trim()}
       />
       {showText && (
         <span
-          className={`font-bold tracking-wide text-[color:var(--student-text)] ${selectedSize.text} ${textClassName}`.trim()}
+          className={`font-bold tracking-wide text-[color:var(--app-text)] ${selectedSize.text} ${textClassName}`.trim()}
         >
           {text}
         </span>

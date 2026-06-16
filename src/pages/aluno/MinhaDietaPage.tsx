@@ -8,6 +8,10 @@ import {
   UtensilsCrossed,
 } from "lucide-react"
 import { Badge, Button, Card, Textarea } from "../../components/ui"
+import {
+  ActivityProgressSummary,
+  CompletionToggle,
+} from "../../components/aluno/ActivityCompletionUX"
 import { useMyAluno } from "../../hooks/useMyAluno"
 import {
   useDietaCheckins,
@@ -18,6 +22,7 @@ import {
 } from "../../hooks/useDieta"
 import { formatDiaSemana } from "../../utils/treino"
 import { showToast } from "../../utils/toast"
+import { TreinoDayNavigator } from "../../components/treino/TreinoDayNavigator"
 import type { DietaCheckin } from "../../types"
 import { format } from "date-fns"
 import { ptBR } from "date-fns/locale"
@@ -57,11 +62,26 @@ const buildDrafts = (checkin: DietaCheckin) => {
   return next
 }
 
-const getCompletion = (checkin: DietaCheckin | null) => {
-  if (!checkin || checkin.refeicoes.length === 0) return 0
-  const done = checkin.refeicoes.filter((item) => item.concluida).length
-  return Math.round((done / checkin.refeicoes.length) * 100)
+const getCompletedMealCount = (
+  checkin: DietaCheckin | null,
+  drafts: Record<string, RefeicaoDraft>,
+) => {
+  if (!checkin) {
+    return 0
+  }
+
+  return checkin.refeicoes.filter((item) => {
+    const draft = drafts[item.dietaRefeicaoId]
+    return draft ? draft.concluida : item.concluida
+  }).length
 }
+
+const isMealDraftDirty = (
+  refeicao: DietaCheckin["refeicoes"][number],
+  draft: RefeicaoDraft,
+) =>
+  draft.concluida !== refeicao.concluida ||
+  draft.observacaoAluno.trim() !== (refeicao.observacaoAluno || "")
 
 export const MinhaDietaPage: React.FC = () => {
   const { data: aluno, isLoading: loadingAluno } = useMyAluno()
@@ -184,7 +204,23 @@ export const MinhaDietaPage: React.FC = () => {
     setCheckinAtual(normalizeDietaCheckin(done))
   }
 
-  const progresso = getCompletion(checkinAtual)
+  const selectedDia = useMemo(() => {
+    if (!planoAtivo) {
+      return undefined
+    }
+    return planoAtivo.dias.find((dia) => dia.id === selectedDiaId)
+  }, [planoAtivo, selectedDiaId])
+
+  const dayNavigationItems = useMemo(
+    () =>
+      (planoAtivo?.dias || []).map((dia) => ({
+        id: dia.id,
+        title: dia.titulo,
+        subtitle: formatDiaSemana(dia.diaSemana),
+        countLabel: `${dia.refeicoes.length} refeição(ões)`,
+      })),
+    [planoAtivo],
+  )
 
   const refeicoesOrdenadas = useMemo(() => {
     if (!checkinAtual) {
@@ -193,6 +229,11 @@ export const MinhaDietaPage: React.FC = () => {
 
     return sortCheckinRefeicoes(checkinAtual.refeicoes)
   }, [checkinAtual])
+
+  const completedMeals = useMemo(
+    () => getCompletedMealCount(checkinAtual, refeicaoDrafts),
+    [checkinAtual, refeicaoDrafts],
+  )
 
   if (loadingAluno || loadingPlano) {
     return (
@@ -205,7 +246,7 @@ export const MinhaDietaPage: React.FC = () => {
 
   if (!aluno) {
     return (
-      <Card className="bg-[color:var(--student-warning-surface)] border-2 border-[color:rgba(241,211,139,0.45)]">
+      <Card className="bg-[color:var(--student-warning-surface)] border-2 border-[color:var(--app-warning-border)]">
         <p className="text-[color:var(--student-text)]">
           Não foi possível localizar seu perfil de aluno para carregar a dieta.
         </p>
@@ -215,7 +256,7 @@ export const MinhaDietaPage: React.FC = () => {
 
   if (erroPlano && !erroPlanoNaoEncontrado) {
     return (
-      <Card className="bg-[color:var(--student-danger-surface)] border-2 border-[color:rgba(239,68,68,0.45)]">
+      <Card className="bg-[color:var(--student-danger-surface)] border-2 border-[color:var(--app-danger-border)]">
         <p className="text-[color:var(--student-danger)]">{erroPlano.message}</p>
       </Card>
     )
@@ -278,34 +319,101 @@ export const MinhaDietaPage: React.FC = () => {
 
       <Card>
         <h2 className="text-lg font-semibold mb-3">Selecionar dia alimentar</h2>
-        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-3">
-          {planoAtivo.dias.map((dia) => (
-            <button
-              key={dia.id}
-              onClick={() => setSelectedDiaId(dia.id)}
-              className={`p-4 rounded-lg border text-left transition-colors ${
-                selectedDiaId === dia.id
-                  ? "border-[color:var(--student-border-strong)] bg-[color:var(--student-info-surface)]"
-                  : "border-[color:var(--student-border)] hover:border-[color:var(--student-border-strong)]"
-              }`}
-            >
-              <p className="font-semibold text-[color:var(--student-text)]">{dia.titulo}</p>
-              <p className="text-sm text-[color:var(--student-text)]">{formatDiaSemana(dia.diaSemana)}</p>
-              <p className="text-xs text-[color:var(--student-text-soft)] mt-1">
-                {dia.refeicoes.length} refeição(ões)
-              </p>
-            </button>
-          ))}
-        </div>
+        <TreinoDayNavigator
+          days={dayNavigationItems}
+          selectedDayId={selectedDiaId}
+          onSelectDay={setSelectedDiaId}
+          label="Dias da minha dieta"
+          mobileLabel="Dias da dieta"
+          idPrefix="dieta-day"
+        />
         <div className="mt-4">
-          <Button icon={PlayCircle} onClick={handleStart} isLoading={startCheckin.isLoading}>
-            Iniciar dia da dieta
+          <Button
+            icon={PlayCircle}
+            onClick={handleStart}
+            isLoading={startCheckin.isLoading}
+            disabled={!!checkinAtual && checkinAtual.status !== "CONCLUIDO"}
+          >
+            {checkinAtual && checkinAtual.status !== "CONCLUIDO"
+              ? "Dia em andamento"
+              : "Iniciar dia da dieta"}
           </Button>
         </div>
       </Card>
 
+      {selectedDia && (
+        <div
+          id={`dieta-day-panel-${selectedDia.id}`}
+          role="tabpanel"
+          aria-labelledby={`dieta-day-tab-${selectedDia.id}`}
+          className="space-y-6"
+        >
+          <Card>
+            <h2 className="text-lg font-semibold mb-2">
+              Refeições planejadas: {selectedDia.titulo}
+            </h2>
+            {selectedDia.observacoes && (
+              <p className="mb-3 text-sm text-[color:var(--student-text-soft)]">
+                {selectedDia.observacoes}
+              </p>
+            )}
+            <div className="space-y-3">
+              {selectedDia.refeicoes.map((refeicao) => {
+                const totalKcal = refeicao.itens.reduce(
+                  (acc, item) => acc + item.calorias,
+                  0,
+                )
+
+                return (
+                  <div
+                    key={refeicao.id}
+                    className="rounded-lg border border-[color:var(--student-border)] bg-[color:var(--student-surface)] p-4"
+                  >
+                    <div className="mb-3 flex flex-wrap items-center gap-2">
+                      <p className="font-semibold text-[color:var(--student-text)]">
+                        {refeicao.nome}
+                      </p>
+                      <Badge>{refeicao.horario || "Horário livre"}</Badge>
+                      <Badge variant="success">{totalKcal.toFixed(0)} kcal</Badge>
+                    </div>
+                    {refeicao.observacoes && (
+                      <p className="mb-3 text-sm text-[color:var(--student-text-soft)]">
+                        {refeicao.observacoes}
+                      </p>
+                    )}
+                    <div className="space-y-2">
+                      {refeicao.itens.map((item) => (
+                        <div
+                          key={item.id}
+                          className="rounded border border-[color:var(--student-border)] bg-[color:var(--student-surface)] p-2 text-sm"
+                        >
+                          <div className="flex flex-wrap items-center gap-2">
+                            <strong>{item.alimento.nome}</strong>
+                            <Badge>{item.quantidadeGramas}g</Badge>
+                            <Badge variant="success">{item.calorias} kcal</Badge>
+                          </div>
+                          <p className="mt-1 text-xs text-[color:var(--student-text-soft)]">
+                            P {item.proteinas}g • C {item.carboidratos}g • G {item.gorduras}g
+                          </p>
+                          {item.observacoes && (
+                            <p className="mt-1 text-xs text-[color:var(--student-text-soft)]">
+                              {item.observacoes}
+                            </p>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )
+              })}
+            </div>
+          </Card>
+        </div>
+      )}
+
       {checkinAtual && (
-        <Card>
+        <div data-onboarding-target="onboarding-meal-checkin">
+          <Card>
           <div className="flex flex-wrap items-center justify-between gap-2 mb-3">
             <h2 className="text-lg font-semibold">
               Check-in atual: {checkinAtual.dietaDia.titulo}
@@ -315,18 +423,13 @@ export const MinhaDietaPage: React.FC = () => {
             </Badge>
           </div>
 
-          <div className="mb-4">
-            <div className="flex justify-between text-sm text-[color:var(--student-text-soft)] mb-1">
-              <span>Progresso do dia</span>
-              <span>{progresso}%</span>
-            </div>
-            <div className="h-2 bg-[color:var(--student-surface-soft)] rounded-full overflow-hidden">
-              <div
-                className="h-full bg-[color:var(--student-success)] rounded-full"
-                style={{ width: `${progresso}%` }}
-              />
-            </div>
-          </div>
+          <ActivityProgressSummary
+            completed={completedMeals}
+            total={checkinAtual.refeicoes.length}
+            label="Progresso da dieta"
+            completedLabel="refeição(ões) concluída(s)"
+            remainingLabel="refeição(ões) restante(s)"
+          />
 
           <div className="space-y-4">
             {refeicoesOrdenadas.map((refeicao) => {
@@ -338,13 +441,19 @@ export const MinhaDietaPage: React.FC = () => {
                 (acc, item) => acc + item.calorias,
                 0,
               )
+              const isCompleted = draft.concluida
+              const hasPendingChange = isMealDraftDirty(refeicao, draft)
 
               return (
                 <div
                   key={refeicao.id}
-                  className="border border-[color:var(--student-border)] rounded-lg p-4 bg-[color:var(--student-surface)]"
+                  className={`rounded-lg border p-4 transition-colors duration-200 motion-reduce:transition-none ${
+                    isCompleted
+                      ? "border-[color:var(--app-success-border)] bg-[color:var(--student-success-surface)]"
+                      : "border-[color:var(--student-border)] bg-[color:var(--student-surface)]"
+                  }`}
                 >
-                  <div className="flex flex-wrap items-center justify-between gap-2 mb-2">
+                  <div className="flex flex-col justify-between gap-3 mb-3 lg:flex-row lg:items-start">
                     <div>
                       <h3 className="font-semibold text-[color:var(--student-text)]">
                         {refeicao.dietaRefeicao.nome}
@@ -354,18 +463,24 @@ export const MinhaDietaPage: React.FC = () => {
                         {totalKcal.toFixed(0)} kcal
                       </p>
                     </div>
-                    <label className="flex items-center gap-2 text-sm text-[color:var(--student-text-soft)]">
-                      <input
-                        type="checkbox"
-                        checked={draft.concluida}
-                        onChange={(e) =>
-                          handleDraftChange(refeicao.dietaRefeicaoId, {
-                            concluida: e.target.checked,
-                          })
-                        }
-                      />
-                      Refeição feita
-                    </label>
+                    <CompletionToggle
+                      checked={draft.concluida}
+                      pendingChange={hasPendingChange}
+                      title={refeicao.dietaRefeicao.nome}
+                      description={
+                        draft.concluida
+                          ? "Registrada no progresso da dieta"
+                          : "Toque para marcar como feita"
+                      }
+                      checkedLabel="Refeição concluída"
+                      uncheckedLabel="Refeição pendente"
+                      icon={UtensilsCrossed}
+                      onChange={(checked) =>
+                        handleDraftChange(refeicao.dietaRefeicaoId, {
+                          concluida: checked,
+                        })
+                      }
+                    />
                   </div>
 
                   <div className="space-y-2 mb-3">
@@ -430,7 +545,8 @@ export const MinhaDietaPage: React.FC = () => {
                 : "Marcar dia como concluído"}
             </Button>
           </div>
-        </Card>
+          </Card>
+        </div>
       )}
 
       <Card>

@@ -77,13 +77,13 @@ export const LoginPage: React.FC = () => {
         </p>
 
         {generalError && (
-          <div className="mb-4 p-4 bg-red-50 border-2 border-red-200 rounded-lg flex items-start gap-3">
-            <AlertCircle className="h-5 w-5 text-red-600 flex-shrink-0 mt-0.5" />
+          <div className="mb-4 flex items-start gap-3 rounded-lg border-2 border-[color:var(--app-danger-border)] bg-[color:var(--app-danger-surface)] p-4">
+            <AlertCircle className="mt-0.5 h-5 w-5 flex-shrink-0 text-[color:var(--app-danger)]" />
             <div>
-              <p className="text-sm font-medium text-red-900">
+              <p className="text-sm font-medium text-[color:var(--app-text)]">
                 Erro ao fazer login
               </p>
-              <p className="text-sm text-red-700 mt-1">{generalError}</p>
+              <p className="mt-1 text-sm text-[color:var(--app-danger)]">{generalError}</p>
             </div>
           </div>
         )}
@@ -163,6 +163,15 @@ export const LoginPage: React.FC = () => {
               className="text-white hover:text-gray-300 font-medium underline"
             >
               Registre-se
+            </Link>
+          </p>
+          <p className="mt-3 text-xs text-gray-500">
+            <Link to="/privacidade" className="underline">
+              Privacidade
+            </Link>{" "}
+            ·{" "}
+            <Link to="/termos" className="underline">
+              Termos de Uso
             </Link>
           </p>
         </div>

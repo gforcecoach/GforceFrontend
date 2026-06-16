@@ -1,4 +1,4 @@
-import { api } from "./api"
+import { api, type OptionalNotFoundRequestConfig } from "./api"
 import type {
   ComentarProfessorCheckinDTO,
   CreateExercicioDTO,
@@ -87,8 +87,11 @@ export const treinoApi = {
     return response.data
   },
 
-  getPlanoAtivo: async (alunoId: string): Promise<PlanoTreino> => {
-    const response = await api.get<PlanoTreino>(`/treinos/aluno/${alunoId}/ativo`)
+  getPlanoAtivo: async (alunoId: string): Promise<PlanoTreino | null> => {
+    const response = await api.get<PlanoTreino | null>(
+      `/treinos/aluno/${alunoId}/ativo`,
+      { allowNotFound: true } as OptionalNotFoundRequestConfig,
+    )
     return response.data
   },
 

@@ -31,6 +31,8 @@ const initialFormState = {
   dataRegistro: "",
 }
 
+const round2 = (value: number) => Math.round(value * 100) / 100
+
 export const HistoricoForm: React.FC<HistoricoFormProps> = ({
   alunoId,
   onSuccess,
@@ -89,11 +91,11 @@ export const HistoricoForm: React.FC<HistoricoFormProps> = ({
 
     const percentualString =
       composicaoCalculada.percentual !== null && composicaoCalculada.percentual !== undefined
-        ? String(composicaoCalculada.percentual)
+        ? String(round2(composicaoCalculada.percentual))
         : ""
     const massaString =
       composicaoCalculada.massaMagra !== null && composicaoCalculada.massaMagra !== undefined
-        ? String(composicaoCalculada.massaMagra)
+        ? String(round2(composicaoCalculada.massaMagra))
         : ""
 
     setFormData((prev) => {
@@ -130,9 +132,9 @@ export const HistoricoForm: React.FC<HistoricoFormProps> = ({
         dataToSend.pernaEsquerdaCm = Number(formData.pernaEsquerdaCm)
       if (formData.pernaDireitaCm)
         dataToSend.pernaDireitaCm = Number(formData.pernaDireitaCm)
-      if (formData.percentualGordura)
+      if (!autoCalcularComposicao && formData.percentualGordura)
         dataToSend.percentualGordura = Number(formData.percentualGordura)
-      if (formData.massaMuscularKg)
+      if (!autoCalcularComposicao && formData.massaMuscularKg)
         dataToSend.massaMuscularKg = Number(formData.massaMuscularKg)
       if (formData.observacoes.trim())
         dataToSend.observacoes = formData.observacoes.trim()

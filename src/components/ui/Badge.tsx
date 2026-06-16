@@ -16,11 +16,11 @@ export const Badge: React.FC<BadgeProps> = ({
     default:
       "bg-[color:var(--student-info-surface)] text-[color:var(--student-text)] border border-[color:var(--student-border-strong)]",
     success:
-      "bg-[color:var(--student-success-surface)] text-[color:var(--student-success)] border border-[color:rgba(125,224,211,0.45)]",
+      "bg-[color:var(--student-success-surface)] text-[color:var(--student-success)] border border-[color:var(--app-success-border)]",
     warning:
-      "bg-[color:var(--student-warning-surface)] text-[color:var(--student-warning)] border border-[color:rgba(241,211,139,0.45)]",
+      "bg-[color:var(--student-warning-surface)] text-[color:var(--student-warning)] border border-[color:var(--app-warning-border)]",
     danger:
-      "bg-[color:var(--student-danger-surface)] text-[color:var(--student-danger)] border border-[color:rgba(239,68,68,0.45)]",
+      "bg-[color:var(--student-danger-surface)] text-[color:var(--student-danger)] border border-[color:var(--app-danger-border)]",
   }
 
   return (

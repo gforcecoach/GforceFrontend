@@ -73,7 +73,7 @@ export const AnswersList: React.FC = () => {
 
   const getEditRoute = (id: string) => {
     if (user?.role === "ADMIN") return `/admin/alunos/${id}/edit`
-    if (user?.role === "PROFESSOR") return `/professor/alunos/${id}/edit`
+    if (user?.role === "PROFESSOR") return `/professor/alunos/${id}/formulario`
     return `/aluno/perfil`
   }
 
@@ -85,8 +85,7 @@ export const AnswersList: React.FC = () => {
 
   const getFotosRoute = (id: string) => {
     if (user?.role === "ADMIN") return `/admin/alunos/${id}/fotos-arquivos`
-    if (user?.role === "PROFESSOR")
-      return `/professor/alunos/${id}/fotos-arquivos`
+    if (user?.role === "PROFESSOR") return `/professor/alunos/${id}/fotos`
     return `/aluno/fotos-arquivos`
   }
 
@@ -100,6 +99,12 @@ export const AnswersList: React.FC = () => {
     if (user?.role === "ADMIN") return `/admin/alunos/${id}/dieta`
     if (user?.role === "PROFESSOR") return `/professor/alunos/${id}/dieta`
     return "/aluno/dieta"
+  }
+
+  const getAlunoContextRoute = (id: string) => {
+    if (user?.role === "PROFESSOR") return `/professor/alunos/${id}`
+    if (user?.role === "ADMIN") return `/admin/alunos/${id}/edit`
+    return "/aluno/perfil"
   }
 
   const canDelete = user?.role === "ADMIN" || user?.role === "PROFESSOR"
@@ -246,7 +251,7 @@ export const AnswersList: React.FC = () => {
   }
 
   return (
-    <div>
+    <div className="min-w-0 overflow-x-clip">
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
         <div>
           <h1 className="text-3xl font-bold text-white">
@@ -263,7 +268,11 @@ export const AnswersList: React.FC = () => {
           )}
         </div>
         {canCreate && (
-          <Button icon={Plus} onClick={() => navigate(getNewRoute())}>
+          <Button
+            icon={Plus}
+            onClick={() => navigate(getNewRoute())}
+            data-onboarding-target="onboarding-student-create"
+          >
             <span className="hidden sm:inline">Novo Aluno</span>
             <span className="sm:hidden">Novo</span>
           </Button>
@@ -303,12 +312,24 @@ export const AnswersList: React.FC = () => {
         </Card>
       )}
 
-      <div className="grid gap-4">
+      <div className="grid min-w-0 gap-4">
         {filteredAlunos.map((aluno) => (
-          <Card key={aluno.id} className="hover:shadow-lg transition-shadow">
+          <Card
+            key={aluno.id}
+            className="min-w-0 max-w-full !p-4 shadow-none transition-shadow sm:!p-6 sm:shadow-[var(--student-shadow)] sm:hover:shadow-lg"
+            onClick={
+              user?.role === "PROFESSOR"
+                ? (event) => {
+                    const target = event.target as HTMLElement
+                    if (target.closest("button")) return
+                    navigate(getAlunoContextRoute(aluno.id))
+                  }
+                : undefined
+            }
+          >
             <div className="flex flex-col gap-4">
-              <div className="flex items-start justify-between gap-3">
-                <div className="flex items-center gap-3 flex-1 min-w-0">
+              <div className="flex min-w-0 flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+                <div className="flex min-w-0 flex-1 items-center gap-3">
                   <div className="bg-blue-500/15 p-2 rounded-full flex-shrink-0">
                     <User className="h-5 w-5 text-blue-300" />
                   </div>
@@ -331,7 +352,7 @@ export const AnswersList: React.FC = () => {
                   </div>
                 </div>
 
-                <div className="flex gap-1 flex-shrink-0">
+                <div className="flex max-w-full flex-wrap justify-end gap-1 sm:flex-shrink-0 sm:flex-nowrap">
                   {canViewEvolucao && (
                     <button
                       onClick={() => navigate(getEvolucaoRoute(aluno.id))}
@@ -345,7 +366,7 @@ export const AnswersList: React.FC = () => {
                   <button
                     onClick={() => navigate(getFotosRoute(aluno.id))}
                     className="p-2 hover:bg-purple-950/30 rounded-lg transition-colors"
-                    title="Ver Fotos e Arquivos"
+                    title="Ver Fotos"
                   >
                     <Camera className="h-4 w-4 text-purple-300" />
                   </button>
@@ -402,7 +423,7 @@ export const AnswersList: React.FC = () => {
                 </div>
               </div>
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div className="grid min-w-0 grid-cols-1 gap-3 sm:grid-cols-2">
                 {aluno.user?.email && (
                   <div className="flex items-center gap-2 text-zinc-300 min-w-0">
                     <Mail className="h-4 w-4 flex-shrink-0" />
@@ -410,29 +431,29 @@ export const AnswersList: React.FC = () => {
                   </div>
                 )}
                 {aluno.telefone && (
-                  <div className="flex items-center gap-2 text-zinc-300">
+                  <div className="flex min-w-0 items-center gap-2 text-zinc-300">
                     <Phone className="h-4 w-4 flex-shrink-0" />
-                    <span className="text-sm">{aluno.telefone}</span>
+                    <span className="text-sm truncate">{aluno.telefone}</span>
                   </div>
                 )}
                 {aluno.idade && (
-                  <div className="flex items-center gap-2 text-zinc-300">
+                  <div className="flex min-w-0 items-center gap-2 text-zinc-300">
                     <Calendar className="h-4 w-4 flex-shrink-0" />
                     <span className="text-sm">{aluno.idade} anos</span>
                   </div>
                 )}
                 {aluno.dias_treino_semana !== null &&
                   aluno.dias_treino_semana !== undefined && (
-                    <div className="flex items-center gap-2 text-zinc-300">
+                    <div className="flex min-w-0 items-center gap-2 text-zinc-300">
                       <Activity className="h-4 w-4 flex-shrink-0" />
-                      <span className="text-sm">
+                      <span className="text-sm truncate">
                         {aluno.dias_treino_semana}x por semana
                       </span>
                     </div>
                   )}
               </div>
 
-              <div className="flex flex-wrap gap-2">
+              <div className="flex min-w-0 flex-wrap gap-2">
                 {aluno.alturaCm && <Badge>Altura: {aluno.alturaCm} cm</Badge>}
                 {aluno.pesoKg && (
                   <Badge variant="success">Peso: {aluno.pesoKg} kg</Badge>
@@ -448,7 +469,7 @@ export const AnswersList: React.FC = () => {
                 )}
               </div>
 
-              <div className="border-t border-zinc-800 pt-3 grid grid-cols-1 sm:grid-cols-3 gap-3">
+              <div className="grid min-w-0 grid-cols-1 gap-3 border-t border-zinc-800 pt-3 sm:grid-cols-3">
                 <Button
                   variant="secondary"
                   icon={TrendingUp}
@@ -484,7 +505,7 @@ export const AnswersList: React.FC = () => {
                 aluno.objetivos_atuais ||
                 (aluno.toma_remedio !== null &&
                   aluno.toma_remedio !== undefined)) && (
-                <div className="border-t border-zinc-800 pt-4 space-y-2 text-sm">
+                <div className="min-w-0 space-y-2 [overflow-wrap:anywhere] border-t border-zinc-800 pt-4 text-sm">
                   {aluno.alimentos_quer_diario &&
                     aluno.alimentos_quer_diario.length > 0 && (
                       <div>

@@ -26,13 +26,13 @@ export const serviceHighlights = [
   {
     title: "Plataforma própria",
     description:
-      "Treino, dieta, arquivos e histórico no mesmo lugar, com menos ruído e mais método.",
+      "Treino, dieta, fotos e histórico no mesmo lugar, com menos ruído e mais método.",
   },
 ] as const
 
 export const frictionPoints = [
   {
-    title: "Treino perdido em PDF antigo",
+    title: "Treino perdido em versões antigas",
     description:
       "Versões soltas dificultam entender o que vale hoje e o que já foi ajustado.",
   },

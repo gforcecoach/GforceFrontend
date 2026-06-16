@@ -19,6 +19,7 @@ import {
   saveLeadSlug,
   shouldTrackLeadOnThisLoad,
 } from "../../../utils/leadTracking"
+import { getAnalyticsConsent } from "../../../utils/privacyConsent"
 import {
   experienceValues,
   frictionPoints,
@@ -38,38 +39,58 @@ export const PublicLandingPage = () => {
   const navigate = useNavigate()
 
   useEffect(() => {
-    const params = new URLSearchParams(window.location.search)
-    const leadParam = params.get("lead")
+    const trackLeadIfAllowed = () => {
+      if (getAnalyticsConsent() !== true) {
+        return
+      }
 
-    if (!leadParam) {
-      return
+      const params = new URLSearchParams(window.location.search)
+      const leadParam = params.get("lead")
+
+      if (!leadParam) {
+        return
+      }
+
+      const leadSlug = normalizeLeadSlug(leadParam)
+      if (!leadSlug) {
+        return
+      }
+
+      saveLeadSlug(leadSlug)
+
+      if (!shouldTrackLeadOnThisLoad(leadSlug)) {
+        return
+      }
+
+      leadLinksApi
+        .trackClick({
+          leadSlug,
+          analyticsConsent: true,
+          referrer: document.referrer || undefined,
+          path: window.location.pathname,
+          utmSource: params.get("utm_source") || undefined,
+          utmMedium: params.get("utm_medium") || undefined,
+          utmCampaign: params.get("utm_campaign") || undefined,
+          utmContent: params.get("utm_content") || undefined,
+          utmTerm: params.get("utm_term") || undefined,
+        })
+        .catch((error) => {
+          console.error("[lead] Falha ao rastrear clique:", error)
+        })
     }
 
-    const leadSlug = normalizeLeadSlug(leadParam)
-    if (!leadSlug) {
-      return
+    trackLeadIfAllowed()
+    window.addEventListener(
+      "privacy:analytics-consent-changed",
+      trackLeadIfAllowed,
+    )
+
+    return () => {
+      window.removeEventListener(
+        "privacy:analytics-consent-changed",
+        trackLeadIfAllowed,
+      )
     }
-
-    saveLeadSlug(leadSlug)
-
-    if (!shouldTrackLeadOnThisLoad(leadSlug)) {
-      return
-    }
-
-    leadLinksApi
-      .trackClick({
-        leadSlug,
-        referrer: document.referrer || undefined,
-        path: window.location.pathname,
-        utmSource: params.get("utm_source") || undefined,
-        utmMedium: params.get("utm_medium") || undefined,
-        utmCampaign: params.get("utm_campaign") || undefined,
-        utmContent: params.get("utm_content") || undefined,
-        utmTerm: params.get("utm_term") || undefined,
-      })
-      .catch((error) => {
-        console.error("[lead] Falha ao rastrear clique:", error)
-      })
   }, [])
 
   useEffect(() => {

@@ -555,7 +555,7 @@ export const FinanceiroPage: React.FC = () => {
 
       {dashboardError && (
         <Card className="border-red-500/40 bg-red-950/30">
-          <p className="text-red-100">Erro ao carregar dashboard financeiro: {dashboardError.message}</p>
+          <p className="text-[color:var(--app-danger)]">Erro ao carregar dashboard financeiro: {dashboardError.message}</p>
         </Card>
       )}
 
@@ -732,7 +732,7 @@ export const FinanceiroPage: React.FC = () => {
                     <svg viewBox="0 0 620 180" className="w-full h-48">
                       <polyline
                         fill="none"
-                        stroke="#60a5fa"
+                        stroke="var(--app-chart-primary)"
                         strokeWidth="3"
                         strokeLinejoin="round"
                         strokeLinecap="round"
@@ -1188,7 +1188,7 @@ export const FinanceiroPage: React.FC = () => {
         <Card className="border-amber-500/40 bg-amber-900/15">
           <div className="flex items-start gap-2">
             <Lock className="h-5 w-5 text-amber-300 mt-0.5" />
-            <p className="text-sm text-amber-100">
+            <p className="text-sm text-[color:var(--app-warning)]">
               O mês {formatMonthLabel(activeMonth)} está fechado. Criação, edição e exclusão de
               registros ficam bloqueadas até reabrir.
             </p>

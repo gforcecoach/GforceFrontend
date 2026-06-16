@@ -254,7 +254,9 @@ export const InviteCodesPage: React.FC = () => {
                     className="flex items-center p-3 border-2 rounded-lg cursor-pointer hover:bg-blue-950/30 transition-colors"
                     style={{
                       borderColor:
-                        selectedRole === "PROFESSOR" ? "#3b82f6" : "#3f3f46",
+                        selectedRole === "PROFESSOR"
+                          ? "var(--app-chart-primary)"
+                          : "var(--app-surface-soft)",
                     }}
                   >
                     <input
@@ -279,7 +281,9 @@ export const InviteCodesPage: React.FC = () => {
                     className="flex items-center p-3 border-2 rounded-lg cursor-pointer hover:bg-purple-950/30 transition-colors"
                     style={{
                       borderColor:
-                        selectedRole === "ADMIN" ? "#a855f7" : "#3f3f46",
+                        selectedRole === "ADMIN"
+                          ? "var(--app-chart-quaternary)"
+                          : "var(--app-surface-soft)",
                     }}
                   >
                     <input

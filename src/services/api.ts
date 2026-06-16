@@ -33,6 +33,16 @@ import {
   type UpdateFinanceEntryDTO,
   type FinanceEntryType,
   type FinanceMonthState,
+  type ProfessorDashboardResponse,
+  type ProfessorFinanceDashboardResponse,
+  type LegalDocumentsResponse,
+  type AcceptedDocument,
+  type PrivacyPreferences,
+  type PrivacyPreferencesInput,
+  type DataSubjectRequest,
+  type DataSubjectRequestType,
+  type OnboardingResponse,
+  type OnboardingState,
 } from "../types"
 
 export const api = axios.create({
@@ -47,7 +57,11 @@ export const api = axios.create({
 export const AUTH_SESSION_REFRESHED_EVENT = "auth:session-refreshed"
 export const AUTH_SESSION_EXPIRED_EVENT = "auth:session-expired"
 
-interface RetryableRequestConfig extends AxiosRequestConfig {
+export interface OptionalNotFoundRequestConfig extends AxiosRequestConfig {
+  allowNotFound?: boolean
+}
+
+interface RetryableRequestConfig extends OptionalNotFoundRequestConfig {
   _retry?: boolean
 }
 
@@ -84,15 +98,18 @@ const cleanPayload = <T extends object>(data: T): Record<string, unknown> =>
   )
 
 let isRedirecting = false
+let accessToken: string | null = null
+
+export const setAccessToken = (token: string | null) => {
+  accessToken = token
+}
 
 const clearAuth = () => {
-  localStorage.removeItem("token")
-  localStorage.removeItem("user")
+  setAccessToken(null)
 }
 
 const storeAuth = (session: LoginResponse) => {
-  localStorage.setItem("token", session.token)
-  localStorage.setItem("user", JSON.stringify(session.user))
+  setAccessToken(session.token)
   window.dispatchEvent(
     new CustomEvent<LoginResponse>(AUTH_SESSION_REFRESHED_EVENT, {
       detail: session,
@@ -146,9 +163,8 @@ api.interceptors.request.use(
       removeContentTypeHeader(config.headers)
     }
 
-    const token = localStorage.getItem("token")
-    if (token) {
-      config.headers.Authorization = `Bearer ${token}`
+    if (accessToken) {
+      config.headers.Authorization = `Bearer ${accessToken}`
     }
     return config
   },
@@ -163,10 +179,22 @@ api.interceptors.request.use(
 api.interceptors.response.use(
   (response) => response,
   async (error: AxiosError<ApiError>) => {
+    const originalRequest = error.config as RetryableRequestConfig | undefined
+    const requestUrl = originalRequest?.url || ""
+    const status = error.response?.status
+    const isExpectedNotFound = status === 404 && originalRequest?.allowNotFound
+
+    if (error.response && isExpectedNotFound) {
+      return {
+        ...error.response,
+        data: null,
+      }
+    }
+
     if (shouldLogApiErrors) {
       console.error("API Error:", {
-        status: error.response?.status,
-        url: error.config?.url,
+        status,
+        url: requestUrl,
       })
     }
 
@@ -176,10 +204,7 @@ api.interceptors.response.use(
       )
     }
 
-    const status = error.response.status
     const errorMessage = error.response.data?.error || "Erro desconhecido"
-    const originalRequest = error.config as RetryableRequestConfig | undefined
-    const requestUrl = originalRequest?.url || ""
     const isLoginRequest = requestUrl.includes("/auth/login")
     const isRefreshRequest = requestUrl.includes("/auth/refresh")
     const isLogoutRequest = requestUrl.includes("/auth/logout")
@@ -187,6 +212,11 @@ api.interceptors.response.use(
     if (status === 401) {
       if (isLoginRequest) {
         return Promise.reject(new Error(errorMessage))
+      }
+
+      if (isRefreshRequest) {
+        clearAuth()
+        return Promise.reject(new Error("Sessão expirada. Faça login novamente."))
       }
 
       if (originalRequest && !originalRequest._retry && !isRefreshRequest && !isLogoutRequest) {
@@ -216,8 +246,19 @@ api.interceptors.response.use(
       )
     }
 
+    if (status === 451) {
+      window.location.href = "/legal/pendente"
+      return Promise.reject(new Error(errorMessage))
+    }
+
     if (status === 404) {
       return Promise.reject(new Error("Recurso não encontrado"))
+    }
+
+    if (status === 409) {
+      const err = new Error(errorMessage) as Error & { status: number }
+      err.status = 409
+      return Promise.reject(err)
     }
 
     if (error.response.data?.details) {
@@ -297,6 +338,12 @@ export const authApi = {
     }
   },
 
+  refresh: async (): Promise<LoginResponse> => {
+    const response = await api.post<LoginResponse>("/auth/refresh")
+    setAccessToken(response.data.token)
+    return response.data
+  },
+
   logout: async (): Promise<void> => {
     await api.post("/auth/logout")
   },
@@ -310,6 +357,94 @@ export const inviteCodesApi = {
 
   getAll: async (): Promise<InviteCode[]> => {
     const response = await api.get<InviteCode[]>("/auth/invite-codes")
+    return response.data
+  },
+}
+
+export const legalApi = {
+  currentDocuments: async (): Promise<LegalDocumentsResponse> => {
+    const response = await api.get<LegalDocumentsResponse>(
+      "/legal/documents/current",
+    )
+    return response.data
+  },
+
+  accept: async (acceptedDocuments: AcceptedDocument[]): Promise<void> => {
+    await api.post("/legal/acceptances", { acceptedDocuments })
+  },
+}
+
+export const privacyApi = {
+  getPreferences: async (): Promise<PrivacyPreferences> => {
+    const response = await api.get<PrivacyPreferences>("/privacy/preferences")
+    return response.data
+  },
+
+  updatePreferences: async (
+    data: PrivacyPreferencesInput,
+  ): Promise<PrivacyPreferences> => {
+    const response = await api.put<PrivacyPreferences>(
+      "/privacy/preferences",
+      data,
+    )
+    return response.data
+  },
+
+  createRequest: async (
+    type: DataSubjectRequestType,
+    description?: string,
+  ): Promise<DataSubjectRequest> => {
+    const response = await api.post<DataSubjectRequest>("/privacy/requests", {
+      type,
+      description,
+    })
+    return response.data
+  },
+
+  listRequests: async (): Promise<DataSubjectRequest[]> => {
+    const response = await api.get<DataSubjectRequest[]>("/privacy/requests")
+    return response.data
+  },
+
+  exportData: async (): Promise<unknown> => {
+    const response = await api.get<unknown>("/privacy/export")
+    return response.data
+  },
+}
+
+export const onboardingApi = {
+  get: async (): Promise<OnboardingResponse> => {
+    const response = await api.get<OnboardingResponse>("/onboarding")
+    return response.data
+  },
+
+  progress: async (currentStepKey: string): Promise<OnboardingState> => {
+    const response = await api.post<OnboardingState>("/onboarding/progress", {
+      currentStepKey,
+    })
+    return response.data
+  },
+
+  complete: async (): Promise<OnboardingState> => {
+    const response = await api.post<OnboardingState>("/onboarding/complete")
+    return response.data
+  },
+
+  dismiss: async (): Promise<OnboardingState> => {
+    const response = await api.post<OnboardingState>("/onboarding/dismiss")
+    return response.data
+  },
+
+  restart: async (): Promise<OnboardingState> => {
+    const response = await api.post<OnboardingState>("/onboarding/restart")
+    return response.data
+  },
+
+  completeChecklistItem: async (key: string): Promise<OnboardingState> => {
+    const response = await api.post<OnboardingState>(
+      "/onboarding/checklist/complete",
+      { key },
+    )
     return response.data
   },
 }
@@ -534,6 +669,32 @@ export const financeApi = {
 
   reopenMonth: async (month: string): Promise<FinanceMonthState> => {
     const response = await api.patch<FinanceMonthState>(`/finance/months/${month}/reopen`)
+    return response.data
+  },
+}
+
+export const professorOperationsApi = {
+  getDashboard: async (): Promise<ProfessorDashboardResponse> => {
+    const response = await api.get<ProfessorDashboardResponse>(
+      "/professor/dashboard",
+    )
+    return response.data
+  },
+
+  getFinanceDashboard: async (
+    from?: string,
+    to?: string,
+  ): Promise<ProfessorFinanceDashboardResponse> => {
+    const params = new URLSearchParams()
+
+    if (from) params.set("from", from)
+    if (to) params.set("to", to)
+
+    const query = params.toString()
+    const path = query
+      ? `/professor/finance/dashboard?${query}`
+      : "/professor/finance/dashboard"
+    const response = await api.get<ProfessorFinanceDashboardResponse>(path)
     return response.data
   },
 }

@@ -9,6 +9,7 @@ import {
 } from "lucide-react"
 import { useLocation, useNavigate } from "react-router-dom"
 import { BrandMark } from "../../../components/BrandMark"
+import { AnalyticsConsent } from "../../../components/AnalyticsConsent"
 import {
   publicNavigationSections,
   WHATSAPP_NUMBER,
@@ -177,6 +178,7 @@ export const PublicSiteLayout: React.FC<PublicSiteLayoutProps> = ({ children }) 
       </nav>
 
       <main>{children}</main>
+      <AnalyticsConsent />
 
       <footer className="border-t border-[color:var(--public-border)] bg-[linear-gradient(180deg,var(--public-footer),var(--public-bg))]">
         <div className="mx-auto grid max-w-7xl gap-10 px-5 py-14 sm:px-6 lg:grid-cols-[1.15fr_0.95fr_1fr] lg:px-8">
@@ -212,6 +214,12 @@ export const PublicSiteLayout: React.FC<PublicSiteLayoutProps> = ({ children }) 
               <button onClick={handleShirtsNavigation} className="inline-flex items-center gap-2 text-left transition-colors hover:text-[color:var(--public-text)]">
                 <Shirt className="h-4 w-4" />
                 Produtos
+              </button>
+              <button onClick={() => navigate("/privacidade")} className="text-left transition-colors hover:text-[color:var(--public-text)]">
+                Privacidade
+              </button>
+              <button onClick={() => navigate("/termos")} className="text-left transition-colors hover:text-[color:var(--public-text)]">
+                Termos de Uso
               </button>
             </div>
           </div>

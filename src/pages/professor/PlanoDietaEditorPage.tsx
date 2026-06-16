@@ -1,9 +1,10 @@
-import React, { useEffect, useMemo, useState } from "react"
+import React, { useEffect, useMemo, useRef, useState } from "react"
 import { useNavigate, useParams } from "react-router-dom"
 import {
   ArrowLeft,
   ClipboardList,
   Loader2,
+  Copy,
   Plus,
   Save,
   Search,
@@ -36,6 +37,7 @@ import type {
 } from "../../types"
 import { format } from "date-fns"
 import { ptBR } from "date-fns/locale"
+import { TreinoDayNavigator } from "../../components/treino/TreinoDayNavigator"
 
 interface DraftItem {
   localId: string
@@ -117,7 +119,13 @@ const mapCheckinStatus = (checkin: DietaCheckin) => {
   return { text: "Em andamento", variant: "warning" as const }
 }
 
-export const PlanoDietaEditorPage: React.FC = () => {
+interface PlanoDietaEditorPageProps {
+  embeddedInStudentContext?: boolean
+}
+
+export const PlanoDietaEditorPage: React.FC<PlanoDietaEditorPageProps> = ({
+  embeddedInStudentContext = false,
+}) => {
   const navigate = useNavigate()
   const { id: alunoId } = useParams<{ id: string }>()
   const { user } = useAuth()
@@ -135,6 +143,7 @@ export const PlanoDietaEditorPage: React.FC = () => {
   const [dias, setDias] = useState<DraftDay[]>([])
   const [selectedDayId, setSelectedDayId] = useState("")
   const [selectedMealId, setSelectedMealId] = useState("")
+  const [selectedMealByDay, setSelectedMealByDay] = useState<Record<string, string>>({})
   const [copySourceDayId, setCopySourceDayId] = useState("")
   const [copyTargetDayIds, setCopyTargetDayIds] = useState<string[]>([])
   const [filtroAlimento, setFiltroAlimento] = useState("")
@@ -151,6 +160,7 @@ export const PlanoDietaEditorPage: React.FC = () => {
   })
   const [comentariosProfessor, setComentariosProfessor] = useState<Record<string, string>>({})
   const [initializedFromBackend, setInitializedFromBackend] = useState(false)
+  const foodBankRef = useRef<HTMLDivElement | null>(null)
 
   const { data: aluno, isLoading: loadingAluno } = useAluno(alunoId || "", {
     enabled: !!alunoId,
@@ -240,6 +250,9 @@ export const PlanoDietaEditorPage: React.FC = () => {
         setSelectedDayId(diasMapeados[0].localId)
         if (diasMapeados[0].refeicoes.length > 0) {
           setSelectedMealId(diasMapeados[0].refeicoes[0].localId)
+          setSelectedMealByDay({
+            [diasMapeados[0].localId]: diasMapeados[0].refeicoes[0].localId,
+          })
         }
       }
       setInitializedFromBackend(true)
@@ -270,6 +283,9 @@ export const PlanoDietaEditorPage: React.FC = () => {
     setDias([diaInicial])
     setSelectedDayId(diaInicial.localId)
     setSelectedMealId(diaInicial.refeicoes[0].localId)
+    setSelectedMealByDay({
+      [diaInicial.localId]: diaInicial.refeicoes[0].localId,
+    })
     setInitializedFromBackend(true)
   }, [erroPlano, erroPlanoNaoEncontrado, initializedFromBackend, loadingPlano, planoAtivo])
 
@@ -303,12 +319,50 @@ export const PlanoDietaEditorPage: React.FC = () => {
   const selectedDay = dias.find((day) => day.localId === selectedDayId)
   const selectedMeal = selectedDay?.refeicoes.find((meal) => meal.localId === selectedMealId)
   const copySourceDay = dias.find((day) => day.localId === copySourceDayId)
+  const visibleDays = selectedDay ? [selectedDay] : []
+
+  const dayNavigationItems = useMemo(
+    () =>
+      dias.map((day) => ({
+        id: day.localId,
+        title: day.titulo || `Dia ${day.ordem}`,
+        subtitle: formatDiaSemana(day.diaSemana),
+        countLabel: `${day.refeicoes.length} refeição(ões)`,
+      })),
+    [dias],
+  )
+
+  const selectDay = (dayId: string) => {
+    const nextDay = dias.find((day) => day.localId === dayId)
+    const rememberedMealId = selectedMealByDay[dayId]
+    const rememberedMealExists = nextDay?.refeicoes.some(
+      (meal) => meal.localId === rememberedMealId,
+    )
+    setSelectedDayId(dayId)
+    setSelectedMealId(
+      rememberedMealExists
+        ? rememberedMealId
+        : nextDay?.refeicoes[0]?.localId || "",
+    )
+  }
+
+  const handleFocusFoodBank = () => {
+    foodBankRef.current?.scrollIntoView({
+      behavior: "smooth",
+      block: "start",
+    })
+    window.setTimeout(() => foodBankRef.current?.focus({ preventScroll: true }), 250)
+  }
 
   const ensureSelectedMeal = () => {
     if (selectedMealId && selectedMeal) return selectedMealId
     if (selectedDay?.refeicoes.length) {
       const fallback = selectedDay.refeicoes[0].localId
       setSelectedMealId(fallback)
+      setSelectedMealByDay((prev) => ({
+        ...prev,
+        [selectedDay.localId]: fallback,
+      }))
       return fallback
     }
     showToast.error("Selecione ou crie uma refeição para adicionar alimentos")
@@ -332,6 +386,56 @@ export const PlanoDietaEditorPage: React.FC = () => {
     }
     setDias((prev) => [...prev, newDay])
     setSelectedDayId(newDay.localId)
+    setSelectedMealId("")
+  }
+
+  const duplicateSelectedDay = () => {
+    if (!selectedDay) {
+      showToast.error("Selecione um dia para duplicar")
+      return
+    }
+
+    const duplicatedDay: DraftDay = {
+      localId: createLocalId(),
+      titulo: `${selectedDay.titulo || `Dia ${selectedDay.ordem}`} cópia`,
+      ordem: dias.length + 1,
+      diaSemana: selectedDay.diaSemana,
+      observacoes: selectedDay.observacoes || "",
+      refeicoes: selectedDay.refeicoes.map((meal, mealIndex) => ({
+        localId: createLocalId(),
+        nome: meal.nome,
+        ordem: mealIndex + 1,
+        horario: meal.horario || "",
+        observacoes: meal.observacoes || "",
+        itens: meal.itens.map((item, itemIndex) => ({
+          localId: createLocalId(),
+          alimentoId: item.alimentoId,
+          alimento: item.alimento,
+          ordem: itemIndex + 1,
+          quantidadeGramas: item.quantidadeGramas,
+          observacoes: item.observacoes || "",
+        })),
+      })),
+    }
+
+    setDias((prev) => [...prev, duplicatedDay])
+    setSelectedDayId(duplicatedDay.localId)
+    setSelectedMealId(duplicatedDay.refeicoes[0]?.localId || "")
+    if (duplicatedDay.refeicoes[0]) {
+      setSelectedMealByDay((prev) => ({
+        ...prev,
+        [duplicatedDay.localId]: duplicatedDay.refeicoes[0].localId,
+      }))
+    }
+  }
+
+  const addMealToSelectedDay = () => {
+    if (!selectedDay) {
+      showToast.error("Selecione um dia para adicionar refeição")
+      return
+    }
+
+    addMeal(selectedDay.localId)
   }
 
   const removeDay = (dayId: string) => {
@@ -368,6 +472,10 @@ export const PlanoDietaEditorPage: React.FC = () => {
           itens: [],
         }
         setSelectedMealId(newMeal.localId)
+        setSelectedMealByDay((prevSelected) => ({
+          ...prevSelected,
+          [dayId]: newMeal.localId,
+        }))
         return { ...day, refeicoes: [...day.refeicoes, newMeal] }
       }),
     )
@@ -402,6 +510,12 @@ export const PlanoDietaEditorPage: React.FC = () => {
     if (selectedMealId === mealId) {
       const fallback = selectedDay?.refeicoes.find((meal) => meal.localId !== mealId)
       setSelectedMealId(fallback?.localId || "")
+      if (selectedDay) {
+        setSelectedMealByDay((prev) => ({
+          ...prev,
+          [selectedDay.localId]: fallback?.localId || "",
+        }))
+      }
     }
   }
 
@@ -740,7 +854,7 @@ export const PlanoDietaEditorPage: React.FC = () => {
     )
   }
 
-  if (loadingAluno || loadingPlano || loadingRecomendacao) {
+  if (loadingAluno || loadingPlano) {
     return (
       <div className="flex flex-col items-center justify-center h-64 gap-4">
         <Loader2 className="h-10 w-10 animate-spin text-blue-600" />
@@ -758,24 +872,28 @@ export const PlanoDietaEditorPage: React.FC = () => {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6" data-onboarding-target="onboarding-diet-editor">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div className="flex items-center gap-3">
-          <button
-            onClick={() =>
-              navigate(isAdmin ? "/admin/alunos" : "/professor/dashboard")
-            }
-            className="p-2 hover:bg-zinc-900 rounded-lg transition-colors"
-            title="Voltar"
-          >
-            <ArrowLeft className="h-5 w-5" />
-          </button>
+          {!embeddedInStudentContext && (
+            <button
+              onClick={() =>
+                navigate(isAdmin ? "/admin/alunos" : "/professor/dashboard")
+              }
+              className="p-2 hover:bg-zinc-900 rounded-lg transition-colors"
+              title="Voltar"
+            >
+              <ArrowLeft className="h-5 w-5" />
+            </button>
+          )}
           <div>
             <h1 className="text-2xl sm:text-3xl font-bold text-white">
               Editor de Dieta
             </h1>
             <p className="text-zinc-300">
-              {aluno.user?.nome || "Aluno"} • plano semanal com macros e check-ins
+              {embeddedInStudentContext
+                ? "Plano semanal com macros e check-ins"
+                : `${aluno.user?.nome || "Aluno"} • plano semanal com macros e check-ins`}
             </p>
           </div>
         </div>
@@ -829,6 +947,13 @@ export const PlanoDietaEditorPage: React.FC = () => {
                 {recomendacao.caloriasMeta ?? "-"}
               </p>
             </div>
+          </div>
+        )}
+
+        {loadingRecomendacao && (
+          <div className="mb-4 flex items-center gap-2 rounded-lg border border-zinc-700 bg-zinc-900/60 p-3 text-sm text-zinc-300">
+            <Loader2 className="h-4 w-4 animate-spin text-blue-400" />
+            Calculando recomendação nutricional...
           </div>
         )}
 
@@ -899,10 +1024,41 @@ export const PlanoDietaEditorPage: React.FC = () => {
       <Card>
         <div className="flex items-center justify-between mb-4">
           <h2 className="text-lg font-semibold">Plano semanal de refeições</h2>
-          <Button variant="secondary" icon={Plus} onClick={addDay}>
+          <Button variant="secondary" icon={Plus} onClick={addDay} className="hidden md:flex">
             Adicionar dia
           </Button>
         </div>
+
+        <TreinoDayNavigator
+          days={dayNavigationItems}
+          selectedDayId={selectedDayId}
+          onSelectDay={selectDay}
+          label="Dias da dieta"
+          mobileLabel="Dias da dieta"
+          idPrefix="dieta-day"
+          actions={[
+            {
+              label: "Adicionar dia",
+              icon: Plus,
+              onClick: addDay,
+            },
+            {
+              label: "Duplicar dia atual",
+              icon: Copy,
+              onClick: duplicateSelectedDay,
+            },
+            {
+              label: "Adicionar refeição ao dia atual",
+              icon: UtensilsCrossed,
+              onClick: addMealToSelectedDay,
+            },
+            {
+              label: "Adicionar alimento à refeição ativa",
+              icon: Search,
+              onClick: handleFocusFoodBank,
+            },
+          ]}
+        />
 
         <div className="mb-4 rounded-lg border border-zinc-700 bg-zinc-900 p-4">
           <div className="flex flex-col gap-4">
@@ -978,9 +1134,12 @@ export const PlanoDietaEditorPage: React.FC = () => {
         </div>
 
         <div className="space-y-4">
-          {dias.map((day) => (
+          {visibleDays.map((day) => (
             <div
               key={day.localId}
+              id={`dieta-day-panel-${day.localId}`}
+              role="tabpanel"
+              aria-labelledby={`dieta-day-tab-${day.localId}`}
               className={`border rounded-lg p-4 ${
                 selectedDayId === day.localId
                   ? "border-blue-400 bg-blue-950/30"
@@ -1018,8 +1177,7 @@ export const PlanoDietaEditorPage: React.FC = () => {
                   <Button
                     variant="secondary"
                     onClick={() => {
-                      setSelectedDayId(day.localId)
-                      setSelectedMealId(day.refeicoes[0]?.localId || "")
+                      selectDay(day.localId)
                     }}
                     className="w-full"
                   >
@@ -1057,13 +1215,39 @@ export const PlanoDietaEditorPage: React.FC = () => {
                 </div>
 
                 <div className="space-y-2">
-                  {day.refeicoes.map((meal) => (
+                  {day.refeicoes.map((meal) => {
+                    const mealTotals = meal.itens.reduce(
+                      (acc, item) => {
+                        const macros = calculateFoodMacrosByQuantity({
+                          quantidadeGramas: item.quantidadeGramas,
+                          calorias100g: item.alimento.calorias100g,
+                          proteinas100g: item.alimento.proteinas100g,
+                          carboidratos100g: item.alimento.carboidratos100g,
+                          gorduras100g: item.alimento.gorduras100g,
+                          fibras100g: item.alimento.fibras100g,
+                        })
+                        acc.calorias += macros.calorias
+                        return acc
+                      },
+                      { calorias: 0 },
+                    )
+
+                    return (
                     <div
                       key={meal.localId}
                       className={`border rounded-lg p-3 ${
                         selectedMealId === meal.localId ? "border-blue-300 bg-zinc-900" : "border-zinc-700"
                       }`}
                     >
+                      <div className="mb-3 flex flex-wrap items-center gap-2">
+                        <p className="font-semibold text-white">{meal.nome}</p>
+                        <span className="rounded-full border border-zinc-700 bg-zinc-800 px-2 py-1 text-xs text-zinc-200">
+                          {meal.horario || "Horário livre"}
+                        </span>
+                        <span className="rounded-full border border-emerald-500/30 bg-emerald-950/50 px-2 py-1 text-xs text-white">
+                          {mealTotals.calorias.toFixed(0)} kcal
+                        </span>
+                      </div>
                       <div className="grid grid-cols-1 md:grid-cols-4 gap-2">
                         <Input
                           label="Nome"
@@ -1100,6 +1284,10 @@ export const PlanoDietaEditorPage: React.FC = () => {
                             onClick={() => {
                               setSelectedDayId(day.localId)
                               setSelectedMealId(meal.localId)
+                              setSelectedMealByDay((prev) => ({
+                                ...prev,
+                                [day.localId]: meal.localId,
+                              }))
                             }}
                             className="w-full"
                           >
@@ -1202,7 +1390,8 @@ export const PlanoDietaEditorPage: React.FC = () => {
                         )}
                       </div>
                     </div>
-                  ))}
+                    )
+                  })}
                 </div>
               </div>
             </div>
@@ -1210,15 +1399,20 @@ export const PlanoDietaEditorPage: React.FC = () => {
         </div>
       </Card>
 
-      <Card>
-        <h2 className="text-lg font-semibold mb-4 flex items-center gap-2">
-          <UtensilsCrossed className="h-5 w-5" />
-          Banco de alimentos
-        </h2>
-        <p className="text-sm text-zinc-300 mb-3">
-          Dia ativo: <strong>{selectedDay?.titulo || "nenhum"}</strong> • Refeição
-          ativa: <strong>{selectedMeal?.nome || "nenhuma"}</strong>
-        </p>
+      <div
+        ref={foodBankRef}
+        tabIndex={-1}
+        data-onboarding-target="onboarding-foods-area"
+      >
+        <Card>
+          <h2 className="text-lg font-semibold mb-4 flex items-center gap-2">
+            <UtensilsCrossed className="h-5 w-5" />
+            Banco de alimentos
+          </h2>
+          <p className="text-sm text-zinc-300 mb-3">
+            Dia ativo: <strong>{selectedDay?.titulo || "nenhum"}</strong> • Refeição
+            ativa: <strong>{selectedMeal?.nome || "nenhuma"}</strong>
+          </p>
 
         <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
           <div>
@@ -1457,7 +1651,8 @@ export const PlanoDietaEditorPage: React.FC = () => {
             </div>
           </div>
         </div>
-      </Card>
+        </Card>
+      </div>
 
       <Card>
         <h2 className="text-lg font-semibold mb-3">Resumo do plano montado</h2>

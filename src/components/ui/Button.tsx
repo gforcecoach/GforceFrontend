@@ -21,11 +21,11 @@ export const Button: React.FC<ButtonProps> = ({
 }) => {
   const variants: Record<ButtonVariant, string> = {
     primary:
-      "bg-[color:var(--student-accent)] bg-[image:var(--student-accent-gradient)] text-[color:var(--student-accent-contrast)] border border-[color:rgba(242,242,242,0.26)] hover:brightness-105",
+      "bg-[color:var(--student-accent)] bg-[image:var(--student-accent-gradient)] text-[color:var(--student-accent-contrast)] border border-[color:var(--app-border)] hover:brightness-105",
     secondary:
       "bg-[color:var(--student-surface)] hover:bg-[color:var(--student-surface-soft)] text-[color:var(--student-text)] border border-[color:var(--student-border)] hover:border-[color:var(--student-border-strong)]",
     danger:
-      "bg-[color:var(--student-danger-surface)] hover:bg-[color:rgba(239,68,68,0.28)] text-[color:var(--student-danger)] border border-[color:rgba(239,68,68,0.45)]",
+      "bg-[color:var(--student-danger-surface)] hover:bg-[color:var(--app-danger-surface-hover)] text-[color:var(--student-danger)] border border-[color:var(--app-danger-border)]",
   }
 
   return (

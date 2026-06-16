@@ -6,17 +6,12 @@ import {
   Plus,
   Trash2,
   Loader2,
-  Download,
   AlertCircle,
-  Dumbbell,
-  Utensils,
 } from "lucide-react"
 import { Card, Button } from "../components/ui"
 import { ModalEnviarFoto } from "../components/ModalEnviarFoto"
-import { ModalEnviarArquivo } from "../components/ModalEnviarArquivo"
 import { ConfirmModal } from "../components/ConfirmModal"
 import { useFotoShape } from "../hooks/useFotoShape"
-import { useArquivoAluno } from "../hooks/useArquivoAluno"
 import { useAluno } from "../hooks/useAlunos"
 import { useAuth } from "../hooks/useAuth"
 import { useMyAluno } from "../hooks/useMyAluno"
@@ -24,26 +19,28 @@ import { showToast } from "../utils/toast"
 import { format } from "date-fns"
 import { ptBR } from "date-fns/locale"
 
-export const FotosArquivosPage: React.FC = () => {
+interface FotosArquivosPageProps {
+  embeddedInStudentContext?: boolean
+}
+
+export const FotosArquivosPage: React.FC<FotosArquivosPageProps> = ({
+  embeddedInStudentContext = false,
+}) => {
   const navigate = useNavigate()
   const { id: alunoIdParam } = useParams<{ id: string }>()
   const { user, token } = useAuth()
 
   const [showModalFoto, setShowModalFoto] = useState(false)
-  const [showModalArquivo, setShowModalArquivo] = useState(false)
   const [confirmDelete, setConfirmDelete] = useState<{
     isOpen: boolean
     id: string
-    tipo: "foto" | "arquivo"
-  }>({ isOpen: false, id: "", tipo: "foto" })
+  }>({ isOpen: false, id: "" })
 
   const isAluno = user?.role === "ALUNO"
   const isAdmin = user?.role === "ADMIN"
   const isProfessor = user?.role === "PROFESSOR"
 
-  const podeEnviarArquivo = isAdmin || isProfessor
   const podeDeletarFoto = isAluno || isAdmin
-  const podeDeletarArquivo = isAdmin || isProfessor
 
   const { data: meuAlunoRegistro } = useMyAluno()
 
@@ -55,12 +52,10 @@ export const FotosArquivosPage: React.FC = () => {
   })
 
   const fotoHook = useFotoShape(token || "")
-  const arquivoHook = useArquivoAluno(token || "")
 
   useEffect(() => {
     if (alunoId && token) {
       fotoHook.fetchFotos(alunoId)
-      arquivoHook.fetchArquivos(alunoId)
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [alunoId, token])
@@ -84,43 +79,15 @@ export const FotosArquivosPage: React.FC = () => {
     }
   }
 
-  const handleUploadArquivo = async (params: {
-    file: File
-    alunoId: string
-    tipo: "TREINO" | "DIETA"
-    titulo: string
-    descricao?: string
-  }) => {
-    try {
-      await arquivoHook.upload(params)
-      showToast.success("Arquivo enviado com sucesso!")
-      arquivoHook.fetchArquivos(alunoId!)
-    } catch (error) {
-      if (error instanceof Error) {
-        showToast.error(error.message)
-      }
-      throw error
-    }
-  }
-
   const handleDeleteFoto = (id: string) => {
-    setConfirmDelete({ isOpen: true, id, tipo: "foto" })
-  }
-
-  const handleDeleteArquivo = (id: string) => {
-    setConfirmDelete({ isOpen: true, id, tipo: "arquivo" })
+    setConfirmDelete({ isOpen: true, id })
   }
 
   const confirmDeleteAction = async () => {
     try {
-      if (confirmDelete.tipo === "foto") {
-        await fotoHook.deleteFoto(confirmDelete.id)
-        showToast.success("Foto excluída com sucesso!")
-      } else {
-        await arquivoHook.deleteArquivo(confirmDelete.id)
-        showToast.success("Arquivo excluído com sucesso!")
-      }
-      setConfirmDelete({ isOpen: false, id: "", tipo: "foto" })
+      await fotoHook.deleteFoto(confirmDelete.id)
+      showToast.success("Foto excluída com sucesso!")
+      setConfirmDelete({ isOpen: false, id: "" })
     } catch (error) {
       if (error instanceof Error) {
         showToast.error(error.message)
@@ -139,7 +106,7 @@ export const FotosArquivosPage: React.FC = () => {
 
   if (!aluno) {
     return (
-      <Card className="bg-[color:var(--student-danger-surface)] border-2 border-[color:rgba(239,68,68,0.45)]">
+      <Card className="bg-[color:var(--student-danger-surface)] border-2 border-[color:var(--app-danger-border)]">
         <div className="flex items-start gap-3">
           <AlertCircle className="h-6 w-6 text-[color:var(--student-danger)] flex-shrink-0 mt-1" />
           <div className="flex-1">
@@ -158,21 +125,23 @@ export const FotosArquivosPage: React.FC = () => {
     )
   }
 
-  if (fotoHook.error || arquivoHook.error) {
+  if (fotoHook.error) {
     return (
       <div>
-        <div className="flex items-center gap-4 mb-6">
-          <button
-            onClick={() => navigate(getBackRoute())}
-            className="p-2 hover:bg-[color:var(--student-surface-soft)] rounded-lg transition-colors"
-          >
-            <ArrowLeft className="h-5 w-5" />
-          </button>
-          <h1 className="text-3xl font-bold text-[color:var(--student-text)]">
-            Erro ao carregar dados
-          </h1>
-        </div>
-        <Card className="bg-[color:var(--student-danger-surface)] border-2 border-[color:rgba(239,68,68,0.45)]">
+        {!embeddedInStudentContext && (
+          <div className="flex items-center gap-4 mb-6">
+            <button
+              onClick={() => navigate(getBackRoute())}
+              className="p-2 hover:bg-[color:var(--student-surface-soft)] rounded-lg transition-colors"
+            >
+              <ArrowLeft className="h-5 w-5" />
+            </button>
+            <h1 className="text-3xl font-bold text-[color:var(--student-text)]">
+              Erro ao carregar dados
+            </h1>
+          </div>
+        )}
+        <Card className="bg-[color:var(--student-danger-surface)] border-2 border-[color:var(--app-danger-border)]">
           <div className="flex items-start gap-3">
             <AlertCircle className="h-6 w-6 text-[color:var(--student-danger)] flex-shrink-0 mt-1" />
             <div className="flex-1">
@@ -180,14 +149,13 @@ export const FotosArquivosPage: React.FC = () => {
                 Erro ao carregar
               </h3>
               <p className="text-[color:var(--student-text)]">
-                {fotoHook.error || arquivoHook.error}
+                {fotoHook.error}
               </p>
               <div className="mt-4">
                 <Button
                   onClick={() => {
                     if (alunoId && token) {
                       fotoHook.fetchFotos(alunoId)
-                      arquivoHook.fetchArquivos(alunoId)
                     }
                   }}
                   variant="secondary"
@@ -203,24 +171,27 @@ export const FotosArquivosPage: React.FC = () => {
   }
 
   return (
-    <div>
+    <div data-onboarding-target="onboarding-photos-main">
       <div className="flex items-center justify-between mb-6">
         <div className="flex items-center gap-4">
-          <button
-            onClick={() => navigate(getBackRoute())}
-            className="p-2 hover:bg-[color:var(--student-surface-soft)] rounded-lg transition-colors"
-          >
-            <ArrowLeft className="h-5 w-5" />
-          </button>
+          {!embeddedInStudentContext && (
+            <button
+              onClick={() => navigate(getBackRoute())}
+              className="p-2 hover:bg-[color:var(--student-surface-soft)] rounded-lg transition-colors"
+            >
+              <ArrowLeft className="h-5 w-5" />
+            </button>
+          )}
           <div>
             <h1 className="text-3xl font-bold text-[color:var(--student-text)]">
-              {isAluno
-                ? "Minhas Fotos e Arquivos"
-                : `Fotos e Arquivos - ${aluno.user?.nome}`}
+              {embeddedInStudentContext
+                ? "Fotos"
+                : isAluno
+                  ? "Minhas Fotos"
+                  : `Fotos - ${aluno.user?.nome}`}
             </h1>
             <p className="text-[color:var(--student-text-soft)] mt-1">
-              {fotoHook.fotos.length} foto(s) • {arquivoHook.treinos.length}{" "}
-              treino(s) • {arquivoHook.dietas.length} dieta(s)
+              {fotoHook.fotos.length} foto(s)
             </p>
           </div>
         </div>
@@ -261,7 +232,7 @@ export const FotosArquivosPage: React.FC = () => {
                   <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-50 transition-all flex items-center justify-center">
                     <button
                       onClick={() => handleDeleteFoto(foto.id)}
-                      className="opacity-0 group-hover:opacity-100 p-2 bg-[color:var(--student-danger-surface)] text-[color:var(--student-text)] rounded-lg hover:bg-[color:rgba(239,68,68,0.28)] transition-all"
+                      className="opacity-0 group-hover:opacity-100 p-2 bg-[color:var(--student-danger-surface)] text-[color:var(--student-text)] rounded-lg hover:bg-[color:var(--app-danger-surface-hover)] transition-all"
                       title="Excluir"
                     >
                       <Trash2 className="h-4 w-4" />
@@ -328,7 +299,7 @@ export const FotosArquivosPage: React.FC = () => {
                     <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-50 transition-all flex items-center justify-center">
                       <button
                         onClick={() => handleDeleteFoto(foto.id)}
-                        className="opacity-0 group-hover:opacity-100 p-2 bg-[color:var(--student-danger-surface)] text-[color:var(--student-text)] rounded-lg hover:bg-[color:rgba(239,68,68,0.28)] transition-all"
+                        className="opacity-0 group-hover:opacity-100 p-2 bg-[color:var(--student-danger-surface)] text-[color:var(--student-text)] rounded-lg hover:bg-[color:var(--app-danger-surface-hover)] transition-all"
                         title="Excluir"
                       >
                         <Trash2 className="h-4 w-4" />
@@ -362,170 +333,6 @@ export const FotosArquivosPage: React.FC = () => {
         </Card>
       )}
 
-      <Card className="mb-6">
-        <div className="flex items-center justify-between mb-4">
-          <h2 className="text-xl font-semibold flex items-center gap-2">
-            <Dumbbell className="h-5 w-5" />
-            {isAluno ? "Meus Treinos" : "Treinos do Aluno"}
-          </h2>
-          {podeEnviarArquivo && (
-            <Button
-              icon={Plus}
-              onClick={() => setShowModalArquivo(true)}
-              disabled={arquivoHook.loading}
-            >
-              Enviar Treino
-            </Button>
-          )}
-        </div>
-
-        {arquivoHook.treinos.length > 0 ? (
-          <div className="space-y-3">
-            {arquivoHook.treinos.map((arquivo) => (
-              <div
-                key={arquivo.id}
-                className="flex items-start justify-between p-4 bg-[color:var(--student-surface)] rounded-lg hover:bg-[color:var(--student-surface-soft)] transition-colors"
-              >
-                <div className="flex-1">
-                  <h3 className="font-semibold text-[color:var(--student-text)]">
-                    {arquivo.titulo}
-                  </h3>
-                  {arquivo.descricao && (
-                    <p className="text-sm text-[color:var(--student-text-soft)] mt-1">
-                      {arquivo.descricao}
-                    </p>
-                  )}
-                  <p className="text-xs text-[color:var(--student-text-muted)] mt-2">
-                    {format(new Date(arquivo.createdAt), "dd/MM/yyyy HH:mm", {
-                      locale: ptBR,
-                    })}
-                  </p>
-                </div>
-                <div className="flex gap-2">
-                  <a
-                    href={arquivo.url}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="p-2 hover:bg-[color:var(--student-info-surface)] rounded-lg transition-colors"
-                    title="Abrir PDF"
-                  >
-                    <Download className="h-4 w-4 text-[color:var(--student-info)]" />
-                  </a>
-                  {podeDeletarArquivo && (
-                    <button
-                      onClick={() => handleDeleteArquivo(arquivo.id)}
-                      className="p-2 hover:bg-[color:var(--student-danger-surface)] rounded-lg transition-colors"
-                      title="Excluir"
-                    >
-                      <Trash2 className="h-4 w-4 text-[color:var(--student-danger)]" />
-                    </button>
-                  )}
-                </div>
-              </div>
-            ))}
-          </div>
-        ) : (
-          <div className="text-center py-12 bg-[color:var(--student-surface)] rounded-lg border-2 border-dashed border-[color:var(--student-border)]">
-            <Dumbbell className="h-12 w-12 text-[color:var(--student-text-muted)] mx-auto mb-4" />
-            <h3 className="text-lg font-medium text-[color:var(--student-text)] mb-2">
-              Nenhum treino disponível
-            </h3>
-            <p className="text-[color:var(--student-text-soft)] mb-4">
-              {podeEnviarArquivo
-                ? "Envie o plano de treino para o aluno"
-                : "Seu professor ainda não enviou nenhum treino"}
-            </p>
-            {podeEnviarArquivo && (
-              <Button icon={Plus} onClick={() => setShowModalArquivo(true)}>
-                Enviar Primeiro Treino
-              </Button>
-            )}
-          </div>
-        )}
-      </Card>
-
-      <Card>
-        <div className="flex items-center justify-between mb-4">
-          <h2 className="text-xl font-semibold flex items-center gap-2">
-            <Utensils className="h-5 w-5" />
-            {isAluno ? "Minhas Dietas" : "Dietas do Aluno"}
-          </h2>
-          {podeEnviarArquivo && (
-            <Button
-              icon={Plus}
-              onClick={() => setShowModalArquivo(true)}
-              disabled={arquivoHook.loading}
-            >
-              Enviar Dieta
-            </Button>
-          )}
-        </div>
-
-        {arquivoHook.dietas.length > 0 ? (
-          <div className="space-y-3">
-            {arquivoHook.dietas.map((arquivo) => (
-              <div
-                key={arquivo.id}
-                className="flex items-start justify-between p-4 bg-[color:var(--student-surface)] rounded-lg hover:bg-[color:var(--student-surface-soft)] transition-colors"
-              >
-                <div className="flex-1">
-                  <h3 className="font-semibold text-[color:var(--student-text)]">
-                    {arquivo.titulo}
-                  </h3>
-                  {arquivo.descricao && (
-                    <p className="text-sm text-[color:var(--student-text-soft)] mt-1">
-                      {arquivo.descricao}
-                    </p>
-                  )}
-                  <p className="text-xs text-[color:var(--student-text-muted)] mt-2">
-                    {format(new Date(arquivo.createdAt), "dd/MM/yyyy HH:mm", {
-                      locale: ptBR,
-                    })}
-                  </p>
-                </div>
-                <div className="flex gap-2">
-                  <a
-                    href={arquivo.url}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="p-2 hover:bg-[color:var(--student-info-surface)] rounded-lg transition-colors"
-                    title="Abrir PDF"
-                  >
-                    <Download className="h-4 w-4 text-[color:var(--student-info)]" />
-                  </a>
-                  {podeDeletarArquivo && (
-                    <button
-                      onClick={() => handleDeleteArquivo(arquivo.id)}
-                      className="p-2 hover:bg-[color:var(--student-danger-surface)] rounded-lg transition-colors"
-                      title="Excluir"
-                    >
-                      <Trash2 className="h-4 w-4 text-[color:var(--student-danger)]" />
-                    </button>
-                  )}
-                </div>
-              </div>
-            ))}
-          </div>
-        ) : (
-          <div className="text-center py-12 bg-[color:var(--student-surface)] rounded-lg border-2 border-dashed border-[color:var(--student-border)]">
-            <Utensils className="h-12 w-12 text-[color:var(--student-text-muted)] mx-auto mb-4" />
-            <h3 className="text-lg font-medium text-[color:var(--student-text)] mb-2">
-              Nenhuma dieta disponível
-            </h3>
-            <p className="text-[color:var(--student-text-soft)] mb-4">
-              {podeEnviarArquivo
-                ? "Envie o plano de dieta para o aluno"
-                : "Seu professor ainda não enviou nenhuma dieta"}
-            </p>
-            {podeEnviarArquivo && (
-              <Button icon={Plus} onClick={() => setShowModalArquivo(true)}>
-                Enviar Primeira Dieta
-              </Button>
-            )}
-          </div>
-        )}
-      </Card>
-
       <ModalEnviarFoto
         isOpen={showModalFoto}
         onClose={() => setShowModalFoto(false)}
@@ -533,28 +340,18 @@ export const FotosArquivosPage: React.FC = () => {
         isLoading={fotoHook.loading}
       />
 
-      <ModalEnviarArquivo
-        isOpen={showModalArquivo}
-        onClose={() => setShowModalArquivo(false)}
-        alunoId={alunoId!}
-        onSubmit={handleUploadArquivo}
-        isLoading={arquivoHook.loading}
-      />
-
       <ConfirmModal
         isOpen={confirmDelete.isOpen}
-        title={`Excluir ${confirmDelete.tipo === "foto" ? "Foto" : "Arquivo"}`}
-        message={`Deseja realmente excluir ${
-          confirmDelete.tipo === "foto" ? "esta foto" : "este arquivo"
-        }?\n\nEsta ação não pode ser desfeita.`}
+        title="Excluir Foto"
+        message="Deseja realmente excluir esta foto?\n\nEsta ação não pode ser desfeita."
         confirmText="Sim, Excluir"
         cancelText="Cancelar"
         variant="danger"
         onConfirm={confirmDeleteAction}
         onCancel={() =>
-          setConfirmDelete({ isOpen: false, id: "", tipo: "foto" })
+          setConfirmDelete({ isOpen: false, id: "" })
         }
-        isLoading={fotoHook.loading || arquivoHook.loading}
+        isLoading={fotoHook.loading}
       />
     </div>
   )

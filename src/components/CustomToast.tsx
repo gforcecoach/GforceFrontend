@@ -21,10 +21,10 @@ export const CustomToast: React.FC<CustomToastProps> = ({
 
   const colors = {
     success:
-      "bg-[color:var(--student-success-surface)] border-[color:rgba(125,224,211,0.45)]",
-    error: "bg-[color:var(--student-danger-surface)] border-[color:rgba(239,68,68,0.45)]",
+      "bg-[color:var(--student-success-surface)] border-[color:var(--app-success-border)]",
+    error: "bg-[color:var(--student-danger-surface)] border-[color:var(--app-danger-border)]",
     warning:
-      "bg-[color:var(--student-warning-surface)] border-[color:rgba(241,211,139,0.45)]",
+      "bg-[color:var(--student-warning-surface)] border-[color:var(--app-warning-border)]",
     info: "bg-[color:var(--student-info-surface)] border-[color:var(--student-border-strong)]",
   }
 

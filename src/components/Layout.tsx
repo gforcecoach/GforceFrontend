@@ -9,10 +9,16 @@ import {
   Dumbbell,
   UtensilsCrossed,
   Home,
+  Wallet,
+  Users,
+  ClipboardList,
+  HelpCircle,
+  ShieldCheck,
 } from "lucide-react"
 import { Button } from "./ui/Button"
 import { useAuth } from "../hooks/useAuth"
 import { BrandMark } from "./BrandMark"
+import { OnboardingProvider } from "../features/onboarding/OnboardingProvider"
 
 interface AlunoShortcut {
   label: string
@@ -60,6 +66,45 @@ const alunoShortcuts: AlunoShortcut[] = [
   },
 ]
 
+const professorShortcuts: AlunoShortcut[] = [
+  {
+    label: "Dashboard",
+    title: "Abrir Dashboard",
+    path: "/professor/dashboard",
+    icon: Home,
+  },
+  {
+    label: "Alunos",
+    title: "Ver Alunos",
+    path: "/professor/alunos",
+    icon: Users,
+  },
+  {
+    label: "Treino",
+    title: "Prescrição de Treino",
+    path: "/professor/alunos",
+    icon: Dumbbell,
+  },
+  {
+    label: "Dieta",
+    title: "Prescrição Alimentar",
+    path: "/professor/alunos",
+    icon: UtensilsCrossed,
+  },
+  {
+    label: "Pendências",
+    title: "Ver Pendências",
+    path: "/professor/dashboard",
+    icon: ClipboardList,
+  },
+  {
+    label: "Financeiro",
+    title: "Abrir Financeiro",
+    path: "/professor/financeiro",
+    icon: Wallet,
+  },
+]
+
 export const Layout: React.FC<{ children: React.ReactNode }> = ({
   children,
 }) => {
@@ -73,13 +118,28 @@ export const Layout: React.FC<{ children: React.ReactNode }> = ({
   }
 
   const isAluno = user?.role === "ALUNO"
+  const isProfessor = user?.role === "PROFESSOR"
   const mobileTopbarButtonClass =
     "!h-9 !w-9 !justify-center !gap-0 !rounded-md !p-0 sm:!h-auto sm:!w-auto sm:!rounded-lg sm:!p-2"
   const activeShortcutClass =
-    "!border-[color:var(--student-border-strong)] !bg-[color:var(--student-surface-soft)] shadow-[inset_0_0_0_1px_rgba(242,242,242,0.08)]"
+    "!border-[color:var(--student-border-strong)] !bg-[color:var(--student-surface-soft)] shadow-[inset_0_0_0_1px_var(--app-accent-surface)]"
+
+  const getShortcutTarget = (label: string) => {
+    if (isProfessor && label === "Alunos") return "onboarding-nav-students"
+    if (isAluno && label === "Treino") return "onboarding-nav-workout"
+    if (isAluno && label === "Dieta") return "onboarding-nav-diet"
+    return undefined
+  }
+
+  const getHelpRoute = () => {
+    if (user?.role === "PROFESSOR") return "/professor/ajuda"
+    if (user?.role === "ALUNO") return "/aluno/ajuda"
+    return "/admin/dashboard"
+  }
 
   return (
-    <div className="min-h-screen bg-[linear-gradient(160deg,var(--student-bg)_0%,var(--student-bg-alt)_42%,var(--student-bg)_100%)] text-[color:var(--student-text)]">
+    <OnboardingProvider>
+      <div className="min-h-screen bg-[linear-gradient(160deg,var(--student-bg)_0%,var(--student-bg-alt)_42%,var(--student-bg)_100%)] text-[color:var(--student-text)]">
       <header className="sticky top-0 z-40 border-b border-[color:var(--student-border)] bg-[color:var(--student-surface-strong)] shadow-[var(--student-shadow)] backdrop-blur">
         <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8">
           <div className="flex flex-col gap-3 py-3 sm:h-16 sm:flex-row sm:items-center sm:justify-between sm:gap-4 sm:py-0">
@@ -112,11 +172,63 @@ export const Layout: React.FC<{ children: React.ReactNode }> = ({
                       title={shortcut.title}
                       aria-label={shortcut.label}
                       aria-current={isActive ? "page" : undefined}
+                      data-onboarding-target={getShortcutTarget(shortcut.label)}
                     >
                       <span className="hidden sm:inline">{shortcut.label}</span>
                     </Button>
                   )
                 })}
+
+              {isProfessor &&
+                professorShortcuts.map((shortcut) => {
+                  const isActive =
+                    location.pathname === shortcut.path ||
+                    (shortcut.path !== "/professor/dashboard" &&
+                      location.pathname.startsWith(shortcut.path))
+
+                  return (
+                    <Button
+                      key={`${shortcut.path}-${shortcut.label}`}
+                      variant="secondary"
+                      icon={shortcut.icon}
+                      onClick={() => navigate(shortcut.path)}
+                      className={`${mobileTopbarButtonClass} ${isActive ? activeShortcutClass : ""}`}
+                      title={shortcut.title}
+                      aria-label={shortcut.label}
+                      aria-current={isActive ? "page" : undefined}
+                      data-onboarding-target={getShortcutTarget(shortcut.label)}
+                    >
+                      <span className="hidden sm:inline">{shortcut.label}</span>
+                    </Button>
+                  )
+                })}
+
+              <Button
+                variant="secondary"
+                icon={ShieldCheck}
+                onClick={() => {
+                  if (user?.role === "ADMIN") navigate("/admin/privacidade")
+                  if (user?.role === "PROFESSOR") navigate("/professor/privacidade")
+                  if (user?.role === "ALUNO") navigate("/aluno/privacidade")
+                }}
+                className={mobileTopbarButtonClass}
+                title="Privacidade"
+              >
+                <span className="hidden sm:inline">Privacidade</span>
+              </Button>
+
+              {(isProfessor || isAluno) && (
+                <Button
+                  variant="secondary"
+                  icon={HelpCircle}
+                  onClick={() => navigate(getHelpRoute())}
+                  className={mobileTopbarButtonClass}
+                  title="Ajuda"
+                  data-onboarding-target="onboarding-help-nav"
+                >
+                  <span className="hidden sm:inline">Ajuda</span>
+                </Button>
+              )}
 
               <Button
                 variant="secondary"
@@ -139,10 +251,18 @@ export const Layout: React.FC<{ children: React.ReactNode }> = ({
       <footer className="mt-auto border-t border-[color:var(--student-border)] bg-[color:var(--student-surface-strong)] backdrop-blur">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
           <p className="text-center text-sm text-[color:var(--student-text-muted)]">
-            © 2026 G-Force Coach. Todos os direitos reservados.
+            © 2026 G-Force Coach. Todos os direitos reservados.{" "}
+            <button onClick={() => navigate("/privacidade")} className="underline">
+              Privacidade
+            </button>{" "}
+            ·{" "}
+            <button onClick={() => navigate("/termos")} className="underline">
+              Termos
+            </button>
           </p>
         </div>
       </footer>
-    </div>
+      </div>
+    </OnboardingProvider>
   )
 }

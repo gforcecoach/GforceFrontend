@@ -27,25 +27,25 @@ ReactDOM.createRoot(document.getElementById("root")!).render(
         toastOptions={{
           duration: 4000,
           style: {
-            background: "rgba(8, 33, 38, 0.92)",
-            color: "#d6ede3",
+            background: "var(--app-surface-strong)",
+            color: "var(--app-text)",
             padding: "16px",
             borderRadius: "8px",
-            border: "1px solid rgba(166, 166, 166, 0.24)",
-            boxShadow: "0 24px 80px rgba(13, 13, 13, 0.56)",
+            border: "1px solid var(--app-border)",
+            boxShadow: "var(--app-shadow)",
           },
           success: {
             duration: 3000,
             iconTheme: {
-              primary: "#10b981",
-              secondary: "#fff",
+              primary: "var(--app-success)",
+              secondary: "var(--app-accent-contrast)",
             },
           },
           error: {
             duration: 4000,
             iconTheme: {
-              primary: "#ef4444",
-              secondary: "#fff",
+              primary: "var(--app-danger)",
+              secondary: "var(--app-accent-contrast)",
             },
           },
         }}

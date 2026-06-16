@@ -1,4 +1,4 @@
-import React, { useState } from "react"
+import React, { useEffect, useMemo, useState } from "react"
 import { useNavigate, Link } from "react-router-dom"
 import {
   Mail,
@@ -15,6 +15,8 @@ import { BrandMark } from "../../components/BrandMark"
 import { useAuth } from "../../hooks/useAuth"
 import { type RegisterDTO } from "../../types"
 import { getStoredLeadSlug } from "../../utils/leadTracking"
+import { legalApi } from "../../services/api"
+import { type LegalDocumentVersion } from "../../types"
 
 export const RegisterPage: React.FC = () => {
   const navigate = useNavigate()
@@ -23,6 +25,14 @@ export const RegisterPage: React.FC = () => {
   const [isProfessor, setIsProfessor] = useState(false)
   const [isPasswordVisible, setIsPasswordVisible] = useState(false)
   const [isConfirmPasswordVisible, setIsConfirmPasswordVisible] = useState(false)
+  const [documents, setDocuments] = useState<LegalDocumentVersion[]>([])
+  const [acceptedLegal, setAcceptedLegal] = useState(false)
+  const [preferences, setPreferences] = useState({
+    analyticsConsent: false,
+    marketingConsent: false,
+    emailConsent: true,
+    whatsappConsent: true,
+  })
 
   const [formData, setFormData] = useState<RegisterDTO>({
     nome: "",
@@ -36,6 +46,27 @@ export const RegisterPage: React.FC = () => {
 
   const [confirmPassword, setConfirmPassword] = useState("")
   const [errors, setErrors] = useState<Record<string, string>>({})
+
+  useEffect(() => {
+    legalApi
+      .currentDocuments()
+      .then((response) => setDocuments(response.documents))
+      .catch(() => {
+        setErrors((current) => ({
+          ...current,
+          legal: "Não foi possível carregar os documentos legais atuais",
+        }))
+      })
+  }, [])
+
+  const acceptedDocuments = useMemo(
+    () =>
+      documents.map((document) => ({
+        documentType: document.documentType,
+        version: document.version,
+      })),
+    [documents],
+  )
 
   const validate = (): boolean => {
     const newErrors: Record<string, string> = {}
@@ -54,8 +85,8 @@ export const RegisterPage: React.FC = () => {
 
     if (!formData.password) {
       newErrors.password = "Senha é obrigatória"
-    } else if (formData.password.length < 6) {
-      newErrors.password = "Senha deve ter pelo menos 6 caracteres"
+    } else if (formData.password.length < 10) {
+      newErrors.password = "Senha deve ter pelo menos 10 caracteres"
     }
 
     if (formData.password !== confirmPassword) {
@@ -64,6 +95,10 @@ export const RegisterPage: React.FC = () => {
 
     if (isProfessor && !formData.inviteCode?.trim()) {
       newErrors.inviteCode = "Código de convite é obrigatório para professores"
+    }
+
+    if (!acceptedLegal || acceptedDocuments.length < 2) {
+      newErrors.legal = "Aceite a Política de Privacidade e os Termos de Uso"
     }
 
     setErrors(newErrors)
@@ -80,10 +115,12 @@ export const RegisterPage: React.FC = () => {
         email: formData.email.trim(),
         password: formData.password,
         role: isProfessor ? "PROFESSOR" : "ALUNO",
+        acceptedDocuments,
+        privacyPreferences: preferences,
       }
 
       const storedLeadSlug = getStoredLeadSlug()
-      if (storedLeadSlug) {
+      if (storedLeadSlug && preferences.analyticsConsent) {
         dataToSend.leadSlug = storedLeadSlug
       }
 
@@ -180,7 +217,7 @@ export const RegisterPage: React.FC = () => {
                 setFormData({ ...formData, password: e.target.value })
                 setErrors({ ...errors, password: "" })
               }}
-              placeholder="Mínimo 6 caracteres"
+              placeholder="Mínimo 10 caracteres"
               error={errors.password}
               className="pr-12"
             />
@@ -274,6 +311,90 @@ export const RegisterPage: React.FC = () => {
               </div>
             </>
           )}
+
+          <div className="space-y-3 rounded-lg border border-zinc-700 bg-zinc-900 p-4 text-sm text-gray-200">
+            <label className="flex items-start gap-3">
+              <input
+                type="checkbox"
+                checked={acceptedLegal}
+                onChange={(event) => {
+                  setAcceptedLegal(event.target.checked)
+                  setErrors({ ...errors, legal: "" })
+                }}
+                className="mt-1 h-4 w-4 rounded border-zinc-600"
+              />
+              <span>
+                Li e aceito a{" "}
+                <Link to="/privacidade" className="underline">
+                  Política de Privacidade
+                </Link>{" "}
+                e os{" "}
+                <Link to="/termos" className="underline">
+                  Termos de Uso
+                </Link>{" "}
+                vigentes.
+              </span>
+            </label>
+            <label className="flex items-start gap-3">
+              <input
+                type="checkbox"
+                checked={preferences.analyticsConsent}
+                onChange={(event) =>
+                  setPreferences({
+                    ...preferences,
+                    analyticsConsent: event.target.checked,
+                  })
+                }
+                className="mt-1 h-4 w-4 rounded border-zinc-600"
+              />
+              <span>Aceito analytics de leads e melhoria da plataforma.</span>
+            </label>
+            <label className="flex items-start gap-3">
+              <input
+                type="checkbox"
+                checked={preferences.marketingConsent}
+                onChange={(event) =>
+                  setPreferences({
+                    ...preferences,
+                    marketingConsent: event.target.checked,
+                  })
+                }
+                className="mt-1 h-4 w-4 rounded border-zinc-600"
+              />
+              <span>Aceito receber comunicações promocionais.</span>
+            </label>
+            <div className="grid gap-2 sm:grid-cols-2">
+              <label className="flex items-center gap-2">
+                <input
+                  type="checkbox"
+                  checked={preferences.emailConsent}
+                  onChange={(event) =>
+                    setPreferences({
+                      ...preferences,
+                      emailConsent: event.target.checked,
+                    })
+                  }
+                />
+                E-mail operacional
+              </label>
+              <label className="flex items-center gap-2">
+                <input
+                  type="checkbox"
+                  checked={preferences.whatsappConsent}
+                  onChange={(event) =>
+                    setPreferences({
+                      ...preferences,
+                      whatsappConsent: event.target.checked,
+                    })
+                  }
+                />
+                WhatsApp operacional
+              </label>
+            </div>
+            {errors.legal && (
+              <p className="text-sm text-red-500">{errors.legal}</p>
+            )}
+          </div>
 
           <Button
             onClick={handleSubmit}

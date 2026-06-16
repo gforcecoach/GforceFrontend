@@ -1,5 +1,5 @@
 import React, { type ReactNode, useEffect } from "react"
-import { Navigate, useNavigate } from "react-router-dom"
+import { Navigate, useLocation, useNavigate } from "react-router-dom"
 import { useAuth } from "../hooks/useAuth"
 import { type UserRole } from "../types"
 import { Loader2, LogOut, Home } from "lucide-react"
@@ -18,6 +18,7 @@ export const AuthGuard: React.FC<AuthGuardProps> = ({
 }) => {
   const { isAuthenticated, isLoading, user, logout } = useAuth()
   const navigate = useNavigate()
+  const location = useLocation()
 
   useEffect(() => {
     if (!isLoading && !isAuthenticated) {
@@ -38,6 +39,10 @@ export const AuthGuard: React.FC<AuthGuardProps> = ({
 
   if (!isAuthenticated) {
     return <Navigate to={redirectTo} replace />
+  }
+
+  if (user?.requiresLegalAcceptance && location.pathname !== "/legal/pendente") {
+    return <Navigate to="/legal/pendente" replace />
   }
 
   if (allowedRoles && user && !allowedRoles.includes(user.role)) {

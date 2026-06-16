@@ -1,4 +1,4 @@
-import { api } from "./api"
+import { api, type OptionalNotFoundRequestConfig } from "./api"
 import type {
   AlimentoDieta,
   AlimentoExterno,
@@ -54,18 +54,21 @@ export const dietaApi = {
     return response.data
   },
 
-  getPlanoAtivo: async (alunoId: string): Promise<PlanoDieta> => {
-    const response = await api.get<PlanoDieta>(`/dietas/aluno/${alunoId}/ativo`)
+  getPlanoAtivo: async (alunoId: string): Promise<PlanoDieta | null> => {
+    const response = await api.get<PlanoDieta | null>(
+      `/dietas/aluno/${alunoId}/ativo`,
+      { allowNotFound: true } as OptionalNotFoundRequestConfig,
+    )
     return response.data
   },
 
   getRecomendacao: async (
     alunoId: string,
     params?: { objetivo?: ObjetivoDieta; fatorAtividade?: number },
-  ): Promise<DietaRecomendacao> => {
-    const response = await api.get<DietaRecomendacao>(
+  ): Promise<DietaRecomendacao | null> => {
+    const response = await api.get<DietaRecomendacao | null>(
       `/dietas/aluno/${alunoId}/recomendacao`,
-      { params },
+      { params, allowNotFound: true } as OptionalNotFoundRequestConfig,
     )
     return response.data
   },

@@ -95,7 +95,7 @@ export const ModalEnviarFoto: React.FC<ModalEnviarFotoProps> = ({
             <label
               className={`flex flex-col items-center justify-center border-2 border-dashed rounded-lg p-8 cursor-pointer transition-colors ${
                 preview
-                  ? "border-[color:rgba(125,224,211,0.55)] bg-[color:var(--student-success-surface)]"
+                  ? "border-[color:var(--app-success-border)] bg-[color:var(--student-success-surface)]"
                   : "border-[color:var(--student-border)] hover:border-[color:var(--student-border-strong)] hover:bg-[color:var(--student-surface)]"
               }`}
             >

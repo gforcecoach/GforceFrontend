@@ -11,6 +11,7 @@ import {
   AUTH_SESSION_EXPIRED_EVENT,
   AUTH_SESSION_REFRESHED_EVENT,
   authApi,
+  setAccessToken,
 } from "../services/api"
 import { showToast } from "../utils/toast"
 import {
@@ -24,11 +25,6 @@ interface AuthProviderProps {
   children: ReactNode
 }
 
-const clearStoredAuth = () => {
-  localStorage.removeItem("token")
-  localStorage.removeItem("user")
-}
-
 export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null)
   const [token, setToken] = useState<string | null>(null)
@@ -36,26 +32,38 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const sessionExpiredNotifiedRef = useRef(false)
 
   useEffect(() => {
-    const storedToken = localStorage.getItem("token")
-    const storedUser = localStorage.getItem("user")
+    let active = true
 
-    if (storedToken && storedUser) {
-      try {
-        setToken(storedToken)
-        setUser(JSON.parse(storedUser))
-      } catch (error) {
-        console.error("Erro ao carregar dados do usuário:", error)
-        clearStoredAuth()
-      }
+    authApi
+      .refresh()
+      .then((session) => {
+        if (!active) return
+        sessionExpiredNotifiedRef.current = false
+        setAccessToken(session.token)
+        setToken(session.token)
+        setUser(session.user)
+      })
+      .catch(() => {
+        if (!active) return
+        setAccessToken(null)
+        setToken(null)
+        setUser(null)
+      })
+      .finally(() => {
+        if (active) {
+          setIsLoading(false)
+        }
+      })
+
+    return () => {
+      active = false
     }
-
-    setIsLoading(false)
   }, [])
 
   const clearAuthState = useCallback(() => {
     setToken(null)
     setUser(null)
-    clearStoredAuth()
+    setAccessToken(null)
   }, [])
 
   useEffect(() => {
@@ -69,8 +77,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     }
 
     const handleSessionExpired = () => {
-      const hadSession =
-        !!localStorage.getItem("token") || !!localStorage.getItem("user")
+      const hadSession = !!token || !!user
 
       clearAuthState()
 
@@ -96,16 +103,15 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         handleSessionExpired,
       )
     }
-  }, [clearAuthState])
+  }, [clearAuthState, token, user])
 
   const login = useCallback(async (data: LoginDTO) => {
     try {
       const response: LoginResponse = await authApi.login(data)
       sessionExpiredNotifiedRef.current = false
+      setAccessToken(response.token)
       setToken(response.token)
       setUser(response.user)
-      localStorage.setItem("token", response.token)
-      localStorage.setItem("user", JSON.stringify(response.user))
       showToast.success(`Bem-vindo(a), ${response.user.nome}!`)
     } catch (error) {
       if (error instanceof Error) {
@@ -136,7 +142,6 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
   const updateUser = useCallback((updatedUser: User) => {
     setUser(updatedUser)
-    localStorage.setItem("user", JSON.stringify(updatedUser))
   }, [])
 
   const value = useMemo(

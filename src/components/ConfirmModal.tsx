@@ -31,13 +31,13 @@ export const ConfirmModal: React.FC<ConfirmModalProps> = ({
     danger: {
       icon: "text-[color:var(--student-danger)]",
       bg: "bg-[color:var(--student-danger-surface)]",
-      border: "border-[color:rgba(239,68,68,0.45)]",
+      border: "border-[color:var(--app-danger-border)]",
       button: "danger" as const,
     },
     warning: {
       icon: "text-[color:var(--student-warning)]",
       bg: "bg-[color:var(--student-warning-surface)]",
-      border: "border-[color:rgba(241,211,139,0.45)]",
+      border: "border-[color:var(--app-warning-border)]",
       button: "primary" as const,
     },
     info: {

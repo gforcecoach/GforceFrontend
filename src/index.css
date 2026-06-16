@@ -3,6 +3,73 @@
 @tailwind utilities;
 
 :root {
+  /* Identidade global da aplicacao, derivada da Landing Page */
+  --app-bg-rgb: 2 11 17;
+  --app-bg-alt-rgb: 7 23 31;
+  --app-surface-rgb: 10 31 42;
+  --app-surface-strong-rgb: 8 33 38;
+  --app-surface-soft-rgb: 18 49 58;
+  --app-border-rgb: 97 113 109;
+  --app-text-rgb: 214 237 227;
+  --app-text-soft-rgb: 194 211 207;
+  --app-text-muted-rgb: 166 178 176;
+  --app-text-subtle-rgb: 137 152 149;
+  --app-info-rgb: 183 192 255;
+  --app-info-strong-rgb: 142 155 255;
+  --app-info-surface-rgb: 28 34 73;
+  --app-success-rgb: 125 224 211;
+  --app-success-strong-rgb: 73 180 166;
+  --app-success-surface-rgb: 14 45 42;
+  --app-warning-rgb: 241 211 139;
+  --app-warning-strong-rgb: 212 165 72;
+  --app-warning-surface-rgb: 51 38 18;
+  --app-danger-rgb: 253 164 175;
+  --app-danger-strong-rgb: 251 113 133;
+  --app-danger-surface-rgb: 69 20 32;
+  --app-purple-rgb: 196 167 231;
+  --app-purple-strong-rgb: 157 122 195;
+
+  --app-bg: rgb(var(--app-bg-rgb));
+  --app-bg-alt: rgb(var(--app-bg-alt-rgb));
+  --app-surface: rgb(var(--app-surface-rgb));
+  --app-surface-strong: rgb(var(--app-surface-strong-rgb));
+  --app-surface-soft: rgb(var(--app-surface-soft-rgb));
+  --app-surface-hover: #173b45;
+  --app-overlay: rgba(2, 11, 17, 0.78);
+  --app-border: rgba(166, 166, 166, 0.55);
+  --app-border-strong: rgba(142, 155, 255, 0.62);
+  --app-text: rgb(var(--app-text-rgb));
+  --app-text-soft: rgb(var(--app-text-soft-rgb));
+  --app-text-muted: rgb(var(--app-text-muted-rgb));
+  --app-text-subtle: rgb(var(--app-text-subtle-rgb));
+  --app-accent: #f2f2f2;
+  --app-accent-soft: #a6a6a6;
+  --app-accent-contrast: #03171d;
+  --app-accent-surface: rgba(242, 242, 242, 0.11);
+  --app-info: rgb(var(--app-info-rgb));
+  --app-info-strong: rgb(var(--app-info-strong-rgb));
+  --app-info-surface: rgba(142, 155, 255, 0.18);
+  --app-info-border: rgba(142, 155, 255, 0.48);
+  --app-success: rgb(var(--app-success-rgb));
+  --app-success-strong: rgb(var(--app-success-strong-rgb));
+  --app-success-surface: rgba(73, 180, 166, 0.16);
+  --app-success-border: rgba(125, 224, 211, 0.46);
+  --app-warning: rgb(var(--app-warning-rgb));
+  --app-warning-strong: rgb(var(--app-warning-strong-rgb));
+  --app-warning-surface: rgba(212, 165, 72, 0.16);
+  --app-warning-border: rgba(241, 211, 139, 0.46);
+  --app-danger: rgb(var(--app-danger-rgb));
+  --app-danger-strong: rgb(var(--app-danger-strong-rgb));
+  --app-danger-surface: rgba(244, 63, 94, 0.16);
+  --app-danger-surface-hover: rgba(244, 63, 94, 0.28);
+  --app-danger-border: rgba(253, 164, 175, 0.46);
+  --app-chart-primary: rgb(var(--app-info-strong-rgb));
+  --app-chart-secondary: rgb(var(--app-success-rgb));
+  --app-chart-tertiary: rgb(var(--app-warning-rgb));
+  --app-chart-quaternary: rgb(var(--app-purple-rgb));
+  --app-shadow: 0 24px 72px rgba(2, 2, 2, 0.58);
+  --app-accent-gradient: linear-gradient(135deg, #f2f2f2 0%, #a6a6a6 100%);
+
   --public-bg: #020b11;
   --public-bg-alt: rgba(7, 23, 31, 0.82);
   --public-surface: rgba(242, 242, 242, 0.045);
@@ -30,30 +97,30 @@
   --public-accent-gradient: linear-gradient(135deg, #f2f2f2 0%, #a6a6a6 100%);
   --public-secondary-gradient: linear-gradient(135deg, #8e9bff 0%, #b7c0ff 100%);
 
-  /* Aluno (sempre dark) */
-  --student-bg: #03171d;
-  --student-bg-alt: rgba(8, 33, 38, 0.58);
-  --student-surface: rgba(242, 242, 242, 0.05);
-  --student-surface-strong: rgba(8, 33, 38, 0.74);
-  --student-surface-soft: rgba(166, 166, 166, 0.08);
-  --student-border: rgba(166, 166, 166, 0.24);
-  --student-border-strong: rgba(142, 155, 255, 0.45);
-  --student-text: #d6ede3;
-  --student-text-soft: rgba(242, 242, 242, 0.84);
-  --student-text-muted: rgba(166, 166, 166, 0.86);
-  --student-accent: #d6ede3;
-  --student-accent-contrast: #03171d;
-  --student-accent-surface: rgba(242, 242, 242, 0.15);
-  --student-info: #b7c0ff;
-  --student-info-surface: rgba(142, 155, 255, 0.22);
-  --student-success: #7de0d3;
-  --student-success-surface: rgba(125, 224, 211, 0.18);
-  --student-warning: #f1d38b;
-  --student-warning-surface: rgba(241, 211, 139, 0.18);
-  --student-danger: #fda4af;
-  --student-danger-surface: rgba(239, 68, 68, 0.18);
-  --student-shadow: 0 24px 80px rgba(13, 13, 13, 0.56);
-  --student-accent-gradient: linear-gradient(135deg, #f2f2f2 0%, #a6a6a6 100%);
+  /* Aliases legados mantidos para uma migracao visual sem regressao funcional */
+  --student-bg: var(--app-bg);
+  --student-bg-alt: var(--app-bg-alt);
+  --student-surface: var(--app-surface);
+  --student-surface-strong: var(--app-surface-strong);
+  --student-surface-soft: var(--app-surface-soft);
+  --student-border: var(--app-border);
+  --student-border-strong: var(--app-border-strong);
+  --student-text: var(--app-text);
+  --student-text-soft: var(--app-text-soft);
+  --student-text-muted: var(--app-text-muted);
+  --student-accent: var(--app-accent);
+  --student-accent-contrast: var(--app-accent-contrast);
+  --student-accent-surface: var(--app-accent-surface);
+  --student-info: var(--app-info);
+  --student-info-surface: var(--app-info-surface);
+  --student-success: var(--app-success);
+  --student-success-surface: var(--app-success-surface);
+  --student-warning: var(--app-warning);
+  --student-warning-surface: var(--app-warning-surface);
+  --student-danger: var(--app-danger);
+  --student-danger-surface: var(--app-danger-surface);
+  --student-shadow: var(--app-shadow);
+  --student-accent-gradient: var(--app-accent-gradient);
 }
 
 /* Reset básico */

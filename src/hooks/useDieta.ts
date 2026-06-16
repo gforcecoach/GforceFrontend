@@ -107,8 +107,8 @@ export const useCreateAlimentoDieta = (): UseMutationResult<
 export const usePlanoDietaAtivo = (
   alunoId: string,
   enabled = true,
-): UseQueryResult<PlanoDieta, Error> => {
-  return useQuery<PlanoDieta, Error>(
+): UseQueryResult<PlanoDieta | null, Error> => {
+  return useQuery<PlanoDieta | null, Error>(
     ["plano-dieta-ativo", alunoId],
     () => dietaApi.getPlanoAtivo(alunoId),
     {
@@ -126,8 +126,8 @@ export const useDietaRecomendacao = (
   objetivo?: ObjetivoDieta,
   fatorAtividade?: number,
   enabled = true,
-): UseQueryResult<DietaRecomendacao, Error> => {
-  return useQuery<DietaRecomendacao, Error>(
+): UseQueryResult<DietaRecomendacao | null, Error> => {
+  return useQuery<DietaRecomendacao | null, Error>(
     ["dieta-recomendacao", alunoId, objetivo, fatorAtividade],
     () => dietaApi.getRecomendacao(alunoId, { objetivo, fatorAtividade }),
     {
