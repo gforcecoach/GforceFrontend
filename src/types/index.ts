@@ -21,6 +21,10 @@ export interface LoginResponse {
   user: User
 }
 
+export interface PasswordResetRequestDTO {
+  email: string
+}
+
 export interface RegisterDTO {
   nome: string
   email: string
