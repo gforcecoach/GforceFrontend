@@ -3,6 +3,7 @@ import {
   type User,
   type LoginDTO,
   type LoginResponse,
+  type PasswordResetRequestDTO,
   type RegisterDTO,
   type InviteCode,
   type CreateInviteCodeDTO,
@@ -321,6 +322,22 @@ export const authApi = {
         throw error
       }
       throw new Error("Erro ao criar conta")
+    }
+  },
+
+  requestPasswordReset: async (
+    data: PasswordResetRequestDTO,
+  ): Promise<void> => {
+    try {
+      const normalizedData = {
+        email: data.email.toLowerCase().trim(),
+      }
+
+      await api.post("/auth/forgot-password", normalizedData)
+    } catch {
+      throw new Error(
+        "Não foi possível enviar as instruções agora. Tente novamente.",
+      )
     }
   },
 
