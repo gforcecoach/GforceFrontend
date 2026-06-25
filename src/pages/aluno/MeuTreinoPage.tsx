@@ -649,6 +649,7 @@ export const MeuTreinoPage: React.FC = () => {
           onSelectDay={handleSelectDia}
           label="Dias do meu treino"
           mobileLabel="Dias do treino"
+          mobileMode="inline"
         />
 
         {!hasTreinoEmAndamento && (
