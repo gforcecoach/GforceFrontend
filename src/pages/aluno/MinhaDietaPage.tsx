@@ -326,6 +326,7 @@ export const MinhaDietaPage: React.FC = () => {
           label="Dias da minha dieta"
           mobileLabel="Dias da dieta"
           idPrefix="dieta-day"
+          mobileMode="inline"
         />
         <div className="mt-4">
           <Button

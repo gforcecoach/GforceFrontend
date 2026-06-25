@@ -22,6 +22,7 @@ interface TreinoDayNavigatorProps {
   mobileLabel?: string
   idPrefix?: string
   actions?: TreinoDayNavigatorAction[]
+  mobileMode?: "menu" | "inline"
 }
 
 export const TreinoDayNavigator: React.FC<TreinoDayNavigatorProps> = ({
@@ -32,6 +33,7 @@ export const TreinoDayNavigator: React.FC<TreinoDayNavigatorProps> = ({
   mobileLabel = "Dias de treino",
   idPrefix = "treino-day",
   actions = [],
+  mobileMode = "menu",
 }) => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
   const tabRefs = useRef<Record<string, HTMLButtonElement | null>>({})
@@ -148,93 +150,139 @@ export const TreinoDayNavigator: React.FC<TreinoDayNavigatorProps> = ({
         </div>
       </div>
 
-      <div className="md:hidden">
-        {isMobileMenuOpen && (
+      {mobileMode === "inline" ? (
+        <div className="md:hidden">
           <div
-            id={`${idPrefix}-mobile-menu`}
-            className="fixed inset-x-4 bottom-24 z-40 rounded-lg border border-[color:var(--student-border)] bg-[color:var(--student-surface-strong)] p-3 shadow-[var(--student-shadow)] transition-opacity duration-150"
+            aria-label={label}
+            className="-mx-1 flex gap-2 overflow-x-auto px-1 pb-1"
           >
-            <div className="mb-2 flex items-center justify-between gap-2">
-              <p className="text-sm font-semibold text-[color:var(--student-text)]">
-                {mobileLabel}
-              </p>
-              <button
-                type="button"
-                ref={closeButtonRef}
-                onClick={closeMobileMenu}
-                className="rounded-lg p-2 text-[color:var(--student-text-soft)] hover:bg-[color:var(--student-surface-soft)] focus:outline-none focus:ring-2 focus:ring-[color:var(--student-border-strong)]"
-                aria-label="Fechar menu de dias"
-              >
-                <X className="h-4 w-4" />
-              </button>
-            </div>
-
-            <div className="max-h-72 space-y-2 overflow-y-auto">
-              {days.map((day) => {
-                const isSelected = day.id === selectedDayId
-                return (
-                  <button
-                    key={day.id}
-                    type="button"
-                    onClick={() => handleSelectDay(day.id)}
-                    aria-current={isSelected ? "true" : undefined}
-                    className={`w-full rounded-lg border px-3 py-2 text-left transition-colors focus:outline-none focus:ring-2 focus:ring-[color:var(--student-border-strong)] ${
-                      isSelected
-                        ? "border-[color:var(--student-border-strong)] bg-[color:var(--student-info-surface)]"
-                        : "border-[color:var(--student-border)] bg-[color:var(--student-surface)] hover:bg-[color:var(--student-surface-soft)]"
-                    }`}
-                  >
-                    <span className="block text-sm font-semibold text-[color:var(--student-text)]">
-                      {day.title}
+            {days.map((day) => {
+              const isSelected = day.id === selectedDayId
+              return (
+                <button
+                  key={day.id}
+                  type="button"
+                  aria-current={isSelected ? "true" : undefined}
+                  onClick={() => onSelectDay(day.id)}
+                  className={[
+                    "min-w-[11rem] flex-1 rounded-lg border px-3 py-3 text-left transition-colors focus:outline-none focus:ring-2 focus:ring-[color:var(--student-border-strong)]",
+                    isSelected
+                      ? "border-[color:var(--app-success-border)] bg-[color:var(--student-success-surface)] text-[color:var(--student-text)]"
+                      : "border-[color:var(--student-border)] bg-[color:var(--student-surface)] text-[color:var(--student-text-soft)]",
+                  ].join(" ")}
+                >
+                  <span className="flex min-w-0 items-start justify-between gap-2">
+                    <span className="min-w-0">
+                      <span className="block truncate text-sm font-semibold text-[color:var(--student-text)]">
+                        {day.title}
+                      </span>
+                      {(day.subtitle || day.countLabel) && (
+                        <span className="mt-1 block truncate text-xs text-[color:var(--student-text-soft)]">
+                          {[day.subtitle, day.countLabel].filter(Boolean).join(" • ")}
+                        </span>
+                      )}
                     </span>
-                    {(day.subtitle || day.countLabel) && (
-                      <span className="mt-1 block text-xs text-[color:var(--student-text-soft)]">
-                        {[day.subtitle, day.countLabel].filter(Boolean).join(" • ")}
+                    {isSelected && (
+                      <span className="shrink-0 rounded-full border border-[color:var(--app-success-border)] bg-[color:var(--app-success-surface)] px-2 py-0.5 text-[11px] font-semibold text-[color:var(--student-success)]">
+                        Ativo
                       </span>
                     )}
-                  </button>
-                )
-              })}
-            </div>
-
-            {actions.length > 0 && (
-              <div className="mt-3 border-t border-[color:var(--student-border)] pt-3">
-                <div className="grid gap-2">
-                  {actions.map((action) => {
-                    const Icon = action.icon || Plus
-                    return (
-                      <button
-                        key={action.label}
-                        type="button"
-                        onClick={() => {
-                          action.onClick()
-                          closeMobileMenu()
-                        }}
-                        className="flex items-center gap-2 rounded-lg border border-[color:var(--student-border)] bg-[color:var(--student-surface)] px-3 py-2 text-sm font-medium text-[color:var(--student-text)] transition-colors hover:bg-[color:var(--student-surface-soft)] focus:outline-none focus:ring-2 focus:ring-[color:var(--student-border-strong)]"
-                      >
-                        <Icon className="h-4 w-4" />
-                        {action.label}
-                      </button>
-                    )
-                  })}
-                </div>
-              </div>
-            )}
+                  </span>
+                </button>
+              )
+            })}
           </div>
-        )}
+        </div>
+      ) : (
+        <div className="md:hidden">
+          {isMobileMenuOpen && (
+            <div
+              id={idPrefix + "-mobile-menu"}
+              className="fixed inset-x-4 bottom-24 z-40 rounded-lg border border-[color:var(--student-border)] bg-[color:var(--student-surface-strong)] p-3 shadow-[var(--student-shadow)] transition-opacity duration-150"
+            >
+              <div className="mb-2 flex items-center justify-between gap-2">
+                <p className="text-sm font-semibold text-[color:var(--student-text)]">
+                  {mobileLabel}
+                </p>
+                <button
+                  type="button"
+                  ref={closeButtonRef}
+                  onClick={closeMobileMenu}
+                  className="rounded-lg p-2 text-[color:var(--student-text-soft)] hover:bg-[color:var(--student-surface-soft)] focus:outline-none focus:ring-2 focus:ring-[color:var(--student-border-strong)]"
+                  aria-label="Fechar menu de dias"
+                >
+                  <X className="h-4 w-4" />
+                </button>
+              </div>
 
-        <button
-          type="button"
-          ref={fabButtonRef}
-          onClick={() => setIsMobileMenuOpen((prev) => !prev)}
-          aria-label={isMobileMenuOpen ? "Fechar menu de dias" : "Abrir menu de dias"}
-          aria-expanded={isMobileMenuOpen}
-          aria-controls={`${idPrefix}-mobile-menu`}
-          className="fixed bottom-5 right-5 z-50 flex h-14 w-14 items-center justify-center rounded-full border border-[color:var(--app-border)] bg-[color:var(--student-accent)] bg-[image:var(--student-accent-gradient)] text-[color:var(--student-accent-contrast)] shadow-[var(--student-shadow)] transition-transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-[color:var(--student-border-strong)]"
-        >
-          {isMobileMenuOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
-        </button>
-      </div>
+              <div className="max-h-72 space-y-2 overflow-y-auto">
+                {days.map((day) => {
+                  const isSelected = day.id === selectedDayId
+                  return (
+                    <button
+                      key={day.id}
+                      type="button"
+                      onClick={() => handleSelectDay(day.id)}
+                      aria-current={isSelected ? "true" : undefined}
+                      className={[
+                        "w-full rounded-lg border px-3 py-2 text-left transition-colors focus:outline-none focus:ring-2 focus:ring-[color:var(--student-border-strong)]",
+                        isSelected
+                          ? "border-[color:var(--student-border-strong)] bg-[color:var(--student-info-surface)]"
+                          : "border-[color:var(--student-border)] bg-[color:var(--student-surface)] hover:bg-[color:var(--student-surface-soft)]",
+                      ].join(" ")}
+                    >
+                      <span className="block text-sm font-semibold text-[color:var(--student-text)]">
+                        {day.title}
+                      </span>
+                      {(day.subtitle || day.countLabel) && (
+                        <span className="mt-1 block text-xs text-[color:var(--student-text-soft)]">
+                          {[day.subtitle, day.countLabel].filter(Boolean).join(" • ")}
+                        </span>
+                      )}
+                    </button>
+                  )
+                })}
+              </div>
+
+              {actions.length > 0 && (
+                <div className="mt-3 border-t border-[color:var(--student-border)] pt-3">
+                  <div className="grid gap-2">
+                    {actions.map((action) => {
+                      const Icon = action.icon || Plus
+                      return (
+                        <button
+                          key={action.label}
+                          type="button"
+                          onClick={() => {
+                            action.onClick()
+                            closeMobileMenu()
+                          }}
+                          className="flex items-center gap-2 rounded-lg border border-[color:var(--student-border)] bg-[color:var(--student-surface)] px-3 py-2 text-sm font-medium text-[color:var(--student-text)] transition-colors hover:bg-[color:var(--student-surface-soft)] focus:outline-none focus:ring-2 focus:ring-[color:var(--student-border-strong)]"
+                        >
+                          <Icon className="h-4 w-4" />
+                          {action.label}
+                        </button>
+                      )
+                    })}
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+
+          <button
+            type="button"
+            ref={fabButtonRef}
+            onClick={() => setIsMobileMenuOpen((prev) => !prev)}
+            aria-label={isMobileMenuOpen ? "Fechar menu de dias" : "Abrir menu de dias"}
+            aria-expanded={isMobileMenuOpen}
+            aria-controls={idPrefix + "-mobile-menu"}
+            className="fixed bottom-5 right-5 z-50 flex h-14 w-14 items-center justify-center rounded-full border border-[color:var(--app-border)] bg-[color:var(--student-accent)] bg-[image:var(--student-accent-gradient)] text-[color:var(--student-accent-contrast)] shadow-[var(--student-shadow)] transition-transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-[color:var(--student-border-strong)]"
+          >
+            {isMobileMenuOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
+          </button>
+        </div>
+      )}
     </>
   )
 }
