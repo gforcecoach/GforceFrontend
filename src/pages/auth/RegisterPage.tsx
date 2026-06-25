@@ -15,6 +15,7 @@ import { BrandMark } from "../../components/BrandMark"
 import { useAuth } from "../../hooks/useAuth"
 import { type RegisterDTO } from "../../types"
 import { getStoredLeadSlug } from "../../utils/leadTracking"
+import { logError } from "../../utils/logError"
 import { legalApi } from "../../services/api"
 import { type LegalDocumentVersion } from "../../types"
 
@@ -135,7 +136,7 @@ export const RegisterPage: React.FC = () => {
       await register(dataToSend)
       navigate("/login")
     } catch (error) {
-      console.log(error)
+      logError("RegisterPage.handleSubmit", error)
     } finally {
       setIsLoading(false)
     }

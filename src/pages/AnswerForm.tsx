@@ -22,6 +22,7 @@ import { useMyAluno } from "../hooks/useMyAluno"
 import { useProfessores } from "../hooks/useProfessores"
 import { type CreateAlunoDTO, type UpdateAlunoDTO } from "../types"
 import { showToast } from "../utils/toast"
+import { logError } from "../utils/logError"
 import { useAuth } from "../hooks/useAuth"
 
 const initialFormState = {
@@ -358,7 +359,7 @@ export const AnswerForm: React.FC<AnswerFormProps> = ({
         navigate(getBackRoute())
       }
     } catch (error: unknown) {
-      console.error("❌ Erro ao salvar aluno:", error)
+      logError("AnswerForm.saveAluno", error)
       if (error instanceof Error) {
         showToast.error(error.message || "Erro ao salvar aluno")
       } else {
