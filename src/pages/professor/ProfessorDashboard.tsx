@@ -19,6 +19,7 @@ import {
 import { ConfirmModal } from "../../components/ConfirmModal"
 import { Card, Button, Input, Badge } from "../../components/ui"
 import { useAlunos, useUpdateAlunoStatus } from "../../hooks/useAlunos"
+import { logError } from "../../utils/logError"
 import { format } from "date-fns"
 import { ptBR } from "date-fns/locale"
 
@@ -116,7 +117,7 @@ export const ProfessorDashboard: React.FC = () => {
             data: { ativo: !ativoAtual },
           })
         } catch (error) {
-          console.error(error)
+          logError("ProfessorDashboard.updateAlunoStatus", error)
         }
       },
     })

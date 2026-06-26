@@ -27,6 +27,7 @@ import {
 import { useAuth } from "../../hooks/useAuth"
 import { showToast } from "../../utils/toast"
 import { calculateFoodMacrosByQuantity } from "../../utils/bodyComposition"
+import { logError } from "../../utils/logError"
 import { formatDiaSemana } from "../../utils/treino"
 import type {
   AlimentoDieta,
@@ -609,7 +610,7 @@ export const PlanoDietaEditorPage: React.FC<PlanoDietaEditorPageProps> = ({
       addFoodToMeal(selectedDay.localId, mealId, imported)
       showToast.success("Alimento importado e adicionado à refeição")
     } catch (error) {
-      console.error(error)
+      logError("PlanoDietaEditorPage.importFood", error)
     }
   }
 
@@ -681,7 +682,7 @@ export const PlanoDietaEditorPage: React.FC<PlanoDietaEditorPageProps> = ({
       })
       showToast.success("Alimento criado e adicionado à refeição ativa")
     } catch (error) {
-      console.error(error)
+      logError("PlanoDietaEditorPage.createCustomFood", error)
     }
   }
 

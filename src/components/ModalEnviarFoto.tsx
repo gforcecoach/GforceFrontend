@@ -2,6 +2,7 @@ import React, { useState } from "react"
 import { X, Upload, Image as ImageIcon } from "lucide-react"
 import { Button, Textarea } from "./ui"
 import { validarFoto } from "../utils/validacaoUpload"
+import { logError } from "../utils/logError"
 
 interface ModalEnviarFotoProps {
   isOpen: boolean
@@ -53,7 +54,7 @@ export const ModalEnviarFoto: React.FC<ModalEnviarFotoProps> = ({
       await onSubmit(file, descricao.trim() || undefined)
       handleClose()
     } catch (error) {
-      console.log(error)
+      logError("ModalEnviarFoto.handleSubmit", error)
     }
   }
 
