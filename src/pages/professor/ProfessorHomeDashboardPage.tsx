@@ -200,7 +200,8 @@ export const ProfessorHomeDashboardPage: React.FC = () => {
       </div>
 
       <div
-        className="grid gap-6 lg:grid-cols-2"
+        id="pendencias"
+        className="grid scroll-mt-24 gap-6 lg:grid-cols-2"
         data-onboarding-target="onboarding-professor-feedbacks"
       >
         <FeedbackColumn

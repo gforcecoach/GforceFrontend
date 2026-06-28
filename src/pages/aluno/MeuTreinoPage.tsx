@@ -670,7 +670,7 @@ export const MeuTreinoPage: React.FC = () => {
         <div
           id={`treino-day-panel-${selectedDia.id}`}
           role="tabpanel"
-          aria-labelledby={`treino-day-tab-${selectedDia.id}`}
+          aria-label={`Treino: ${selectedDia.titulo}`}
           className="space-y-6"
         >
           <Card className="border border-[color:var(--app-success-border)] bg-[color:var(--app-surface-strong)]">

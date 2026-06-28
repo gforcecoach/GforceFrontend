@@ -975,7 +975,7 @@ export const PlanoTreinoEditorPage: React.FC<PlanoTreinoEditorPageProps> = ({
               key={day.localId}
               id={`treino-day-panel-${day.localId}`}
               role="tabpanel"
-              aria-labelledby={`treino-day-tab-${day.localId}`}
+              aria-label={`Treino: ${day.titulo || "Dia sem título"}`}
               className={`border rounded-lg p-4 transition-colors ${
                 selectedDayId === day.localId
                   ? "border-blue-400 bg-blue-950/30"

@@ -49,11 +49,14 @@ export const ModalEnviarFoto: React.FC<ModalEnviarFotoProps> = ({
       return
     }
 
+    setError(null)
     try {
       await onSubmit(file, descricao.trim() || undefined)
       handleClose()
     } catch (error) {
-      console.log(error)
+      setError(
+        error instanceof Error ? error.message : "Não foi possível enviar a foto",
+      )
     }
   }
 
@@ -84,6 +87,8 @@ export const ModalEnviarFoto: React.FC<ModalEnviarFotoProps> = ({
           <button
             onClick={handleClose}
             disabled={isLoading}
+            aria-label="Fechar envio de foto"
+            title="Fechar"
             className="rounded-lg p-2 text-[color:var(--student-text-muted)] transition-colors hover:bg-[color:var(--student-surface)]"
           >
             <X className="h-5 w-5" />
@@ -133,7 +138,7 @@ export const ModalEnviarFoto: React.FC<ModalEnviarFotoProps> = ({
             </label>
 
             {error && (
-              <p className="mt-2 flex items-center gap-1 text-sm text-[color:var(--student-danger)]">
+              <p role="alert" className="mt-2 flex items-center gap-1 text-sm text-[color:var(--student-danger)]">
                 ⚠️ {error}
               </p>
             )}

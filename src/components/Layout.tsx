@@ -94,7 +94,7 @@ const professorShortcuts: AlunoShortcut[] = [
   {
     label: "Pendências",
     title: "Ver Pendências",
-    path: "/professor/dashboard",
+    path: "/professor/dashboard#pendencias",
     icon: ClipboardList,
   },
   {
@@ -137,6 +137,40 @@ export const Layout: React.FC<{ children: React.ReactNode }> = ({
     return "/admin/dashboard"
   }
 
+  const isProfessorShortcutActive = (label: string) => {
+    const { pathname, hash } = location
+
+    if (label === "Dashboard") {
+      return pathname === "/professor/dashboard" && hash !== "#pendencias"
+    }
+    if (label === "Pendências") {
+      return pathname === "/professor/dashboard" && hash === "#pendencias"
+    }
+    const isTreinoRoute =
+      pathname.endsWith("/treino") || pathname.endsWith("/treino/")
+    const isDietaRoute =
+      pathname.endsWith("/dieta") || pathname.endsWith("/dieta/")
+
+    if (label === "Treino") {
+      return isTreinoRoute
+    }
+    if (label === "Dieta") {
+      return isDietaRoute
+    }
+    if (label === "Alunos") {
+      return (
+        pathname.startsWith("/professor/alunos") &&
+        !isTreinoRoute &&
+        !isDietaRoute
+      )
+    }
+
+    return (
+      pathname ===
+      professorShortcuts.find((item) => item.label === label)?.path
+    )
+  }
+
   return (
     <OnboardingProvider>
       <div className="min-h-screen bg-[linear-gradient(160deg,var(--student-bg)_0%,var(--student-bg-alt)_42%,var(--student-bg)_100%)] text-[color:var(--student-text)]">
@@ -155,7 +189,13 @@ export const Layout: React.FC<{ children: React.ReactNode }> = ({
             </div>
 
             <nav
-              aria-label="Atalhos do aluno"
+              aria-label={
+                isProfessor
+                  ? "Atalhos do professor"
+                  : isAluno
+                    ? "Atalhos do aluno"
+                    : "Ações da conta"
+              }
               className="flex w-full items-center gap-1 overflow-x-auto pb-1 sm:w-auto sm:justify-end sm:gap-2 sm:overflow-visible sm:pb-0"
             >
               {isAluno &&
@@ -181,10 +221,7 @@ export const Layout: React.FC<{ children: React.ReactNode }> = ({
 
               {isProfessor &&
                 professorShortcuts.map((shortcut) => {
-                  const isActive =
-                    location.pathname === shortcut.path ||
-                    (shortcut.path !== "/professor/dashboard" &&
-                      location.pathname.startsWith(shortcut.path))
+                  const isActive = isProfessorShortcutActive(shortcut.label)
 
                   return (
                     <Button
@@ -213,6 +250,7 @@ export const Layout: React.FC<{ children: React.ReactNode }> = ({
                 }}
                 className={mobileTopbarButtonClass}
                 title="Privacidade"
+                aria-label="Privacidade"
               >
                 <span className="hidden sm:inline">Privacidade</span>
               </Button>
@@ -224,6 +262,7 @@ export const Layout: React.FC<{ children: React.ReactNode }> = ({
                   onClick={() => navigate(getHelpRoute())}
                   className={mobileTopbarButtonClass}
                   title="Ajuda"
+                  aria-label="Ajuda"
                   data-onboarding-target="onboarding-help-nav"
                 >
                   <span className="hidden sm:inline">Ajuda</span>
@@ -236,6 +275,7 @@ export const Layout: React.FC<{ children: React.ReactNode }> = ({
                 onClick={handleLogout}
                 className={mobileTopbarButtonClass}
                 title="Sair"
+                aria-label="Sair"
               >
                 <span className="hidden sm:inline">Sair</span>
               </Button>
