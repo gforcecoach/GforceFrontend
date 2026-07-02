@@ -4,6 +4,7 @@ import {
   type LoginDTO,
   type LoginResponse,
   type PasswordResetRequestDTO,
+  type PasswordResetDTO,
   type RegisterDTO,
   type InviteCode,
   type CreateInviteCodeDTO,
@@ -339,6 +340,13 @@ export const authApi = {
         "Não foi possível enviar as instruções agora. Tente novamente.",
       )
     }
+  },
+
+  resetPassword: async (data: PasswordResetDTO): Promise<void> => {
+    await api.post("/auth/reset-password", {
+      token: data.token,
+      newPassword: data.newPassword,
+    })
   },
 
   me: async (): Promise<User> => {

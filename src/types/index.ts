@@ -25,6 +25,11 @@ export interface PasswordResetRequestDTO {
   email: string
 }
 
+export interface PasswordResetDTO {
+  token: string
+  newPassword: string
+}
+
 export interface RegisterDTO {
   nome: string
   email: string
