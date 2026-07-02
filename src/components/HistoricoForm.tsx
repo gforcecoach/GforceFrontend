@@ -8,6 +8,7 @@ import {
   calculateLeanMassKg,
   calculateNavyBodyFat,
 } from "../utils/bodyComposition"
+import { showToast } from "../utils/toast"
 import type { SexoBiologico } from "../types"
 
 interface HistoricoFormProps {
@@ -140,6 +141,14 @@ export const HistoricoForm: React.FC<HistoricoFormProps> = ({
         dataToSend.observacoes = formData.observacoes.trim()
       if (formData.dataRegistro)
         dataToSend.dataRegistro = new Date(formData.dataRegistro).toISOString()
+
+      const hasConteudo = Object.keys(dataToSend).some(
+        (key) => key !== "alunoId" && key !== "dataRegistro",
+      )
+      if (!hasConteudo) {
+        showToast.error("Informe pelo menos uma medida ou uma observação.")
+        return
+      }
 
       await createHistorico.mutateAsync(dataToSend)
 
