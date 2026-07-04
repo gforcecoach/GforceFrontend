@@ -343,7 +343,7 @@ export const HistoricoForm: React.FC<HistoricoFormProps> = ({
               readOnly={autoCalcularComposicao}
             />
             <Input
-              label="Massa Muscular (kg)"
+              label="Massa Magra (kg)"
               type="number"
               step="0.1"
               value={formData.massaMuscularKg}
@@ -363,7 +363,7 @@ export const HistoricoForm: React.FC<HistoricoFormProps> = ({
           onChange={(e) =>
             setFormData({ ...formData, observacoes: e.target.value })
           }
-          placeholder="Ex: Boa evolução, aumento de massa muscular visível..."
+          placeholder="Ex: Boa evolução, aumento de massa magra visível..."
         />
       </div>
 

@@ -17,7 +17,7 @@ const nomesMetricas: Record<MetricaEvolucao, string> = {
   quadrilCm: "Quadril (cm)",
   pescocoCm: "Pescoço (cm)",
   percentualGordura: "% Gordura",
-  massaMuscularKg: "Massa Muscular (kg)",
+  massaMuscularKg: "Massa Magra (kg)",
   bracoEsquerdoCm: "Braço Esquerdo (cm)",
   bracoDireitoCm: "Braço Direito (cm)",
   pernaEsquerdaCm: "Perna Esquerda (cm)",
