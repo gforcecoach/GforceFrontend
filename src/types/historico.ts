@@ -11,7 +11,7 @@ export interface HistoricoEvolucao {
   pernaEsquerdaCm?: number | null
   pernaDireitaCm?: number | null
   percentualGordura?: number | null
-  massaMuscularKg?: number | null
+  massaMagraKg?: number | null
   observacoes?: string | null
   registradoPor: string
   dataRegistro: string
@@ -30,7 +30,7 @@ export interface CreateHistoricoDTO {
   pernaEsquerdaCm?: number
   pernaDireitaCm?: number
   percentualGordura?: number
-  massaMuscularKg?: number
+  massaMagraKg?: number
   observacoes?: string
   dataRegistro?: string
 }
@@ -46,7 +46,7 @@ export interface UpdateHistoricoDTO {
   pernaEsquerdaCm?: number
   pernaDireitaCm?: number
   percentualGordura?: number
-  massaMuscularKg?: number
+  massaMagraKg?: number
   observacoes?: string
   dataRegistro?: string
 }
@@ -63,7 +63,7 @@ export type MetricaEvolucao =
   | "quadrilCm"
   | "pescocoCm"
   | "percentualGordura"
-  | "massaMuscularKg"
+  | "massaMagraKg"
   | "bracoEsquerdoCm"
   | "bracoDireitoCm"
   | "pernaEsquerdaCm"
