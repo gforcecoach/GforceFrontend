@@ -32,6 +32,7 @@ import {
 } from "../../modules/treino-modelos/hooks/useTreinoModelos"
 import { showToast } from "../../utils/toast"
 import { diasSemanaOptions, formatDiaSemana, grupamentoLabels } from "../../utils/treino"
+import { logError } from "../../utils/logError"
 import { useAuth } from "../../hooks/useAuth"
 import type {
   Exercicio,
@@ -601,7 +602,7 @@ export const PlanoTreinoEditorPage: React.FC<PlanoTreinoEditorPageProps> = ({
         grupamentoMuscular: customExercise.grupamentoMuscular,
       })
     } catch (error) {
-      console.error(error)
+      logError("PlanoTreinoEditorPage.createCustomExercise", error)
     }
   }
 
@@ -622,7 +623,7 @@ export const PlanoTreinoEditorPage: React.FC<PlanoTreinoEditorPageProps> = ({
         showToast.success("Exercício importado e adicionado ao treino")
       }
     } catch (error) {
-      console.error(error)
+      logError("PlanoTreinoEditorPage.importExternalExercise", error)
     }
   }
 

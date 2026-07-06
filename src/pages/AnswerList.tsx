@@ -28,6 +28,7 @@ import {
 } from "../hooks/useAlunos"
 import { useAuth } from "../hooks/useAuth"
 import { showToast } from "../utils/toast"
+import { logError } from "../utils/logError"
 import { format } from "date-fns"
 import { ptBR } from "date-fns/locale"
 
@@ -183,7 +184,7 @@ export const AnswersList: React.FC = () => {
             data: { ativo: !ativoAtual },
           })
         } catch (error) {
-          console.error(error)
+          logError("AnswerList.updateAlunoStatus", error)
         }
       },
     })

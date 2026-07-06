@@ -2,6 +2,7 @@ import React, { useState } from "react"
 import { X, Upload, Image as ImageIcon } from "lucide-react"
 import { Button, Textarea } from "./ui"
 import { validarFoto } from "../utils/validacaoUpload"
+import { logError } from "../utils/logError"
 
 interface ModalEnviarFotoProps {
   isOpen: boolean
