@@ -1,5 +1,5 @@
 import React, { useState } from "react"
-import { useNavigate, Link } from "react-router-dom"
+import { useNavigate, Link, useLocation } from "react-router-dom"
 import {
   AlertCircle,
   ArrowLeft,
@@ -16,6 +16,7 @@ import { BrandMark } from "../components/BrandMark"
 import { useAuth } from "../hooks/useAuth"
 import { authApi } from "../services/api"
 import { type LoginDTO } from "../types"
+import { PasswordResetForm } from "../components/PasswordResetForm"
 import { showToast } from "../utils/toast"
 
 const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
@@ -26,6 +27,8 @@ const secondaryActionClass =
 
 export const LoginPage: React.FC = () => {
   const navigate = useNavigate()
+  const location = useLocation()
+  const resetToken = new URLSearchParams(location.hash.slice(1)).get("resetToken")
   const { login } = useAuth()
   const [isLoading, setIsLoading] = useState(false)
   const [isRecoveryMode, setIsRecoveryMode] = useState(false)
@@ -151,12 +154,19 @@ export const LoginPage: React.FC = () => {
           <BrandMark size="lg" text="G-FORCE Coach" />
         </h1>
         <p className="text-center text-gray-300 mb-8">
-          {isRecoveryMode
-            ? "Receba instruções para redefinir sua senha"
-            : "Faça login para continuar"}
+          {resetToken
+            ? "Defina uma nova senha para sua conta"
+            : isRecoveryMode
+              ? "Receba instruções para redefinir sua senha"
+              : "Faça login para continuar"}
         </p>
 
-        {isRecoveryMode ? (
+        {resetToken ? (
+          <PasswordResetForm
+            token={resetToken}
+            onBack={() => navigate("/login", { replace: true })}
+          />
+        ) : isRecoveryMode ? (
           <>
             {recoveryError && (
               <div className="mb-4 flex items-start gap-3 rounded-lg border-2 border-[color:var(--app-danger-border)] bg-[color:var(--app-danger-surface)] p-4">

@@ -346,7 +346,7 @@ export const MinhaDietaPage: React.FC = () => {
         <div
           id={`dieta-day-panel-${selectedDia.id}`}
           role="tabpanel"
-          aria-labelledby={`dieta-day-tab-${selectedDia.id}`}
+          aria-label={`Dieta: ${selectedDia.titulo}`}
           className="space-y-6"
         >
           <Card>

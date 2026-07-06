@@ -8,6 +8,7 @@ import {
   calculateLeanMassKg,
   calculateNavyBodyFat,
 } from "../utils/bodyComposition"
+import { showToast } from "../utils/toast"
 import type { SexoBiologico } from "../types"
 
 interface HistoricoFormProps {
@@ -26,7 +27,7 @@ const initialFormState = {
   pernaEsquerdaCm: "",
   pernaDireitaCm: "",
   percentualGordura: "",
-  massaMuscularKg: "",
+  massaMagraKg: "",
   observacoes: "",
   dataRegistro: "",
 }
@@ -101,14 +102,14 @@ export const HistoricoForm: React.FC<HistoricoFormProps> = ({
     setFormData((prev) => {
       if (
         prev.percentualGordura === percentualString &&
-        prev.massaMuscularKg === massaString
+        prev.massaMagraKg === massaString
       ) {
         return prev
       }
       return {
         ...prev,
         percentualGordura: percentualString,
-        massaMuscularKg: massaString,
+        massaMagraKg: massaString,
       }
     })
   }, [autoCalcularComposicao, composicaoCalculada])
@@ -132,14 +133,22 @@ export const HistoricoForm: React.FC<HistoricoFormProps> = ({
         dataToSend.pernaEsquerdaCm = Number(formData.pernaEsquerdaCm)
       if (formData.pernaDireitaCm)
         dataToSend.pernaDireitaCm = Number(formData.pernaDireitaCm)
-      if (!autoCalcularComposicao && formData.percentualGordura)
+      if (formData.percentualGordura)
         dataToSend.percentualGordura = Number(formData.percentualGordura)
-      if (!autoCalcularComposicao && formData.massaMuscularKg)
-        dataToSend.massaMuscularKg = Number(formData.massaMuscularKg)
+      if (formData.massaMagraKg)
+        dataToSend.massaMagraKg = Number(formData.massaMagraKg)
       if (formData.observacoes.trim())
         dataToSend.observacoes = formData.observacoes.trim()
       if (formData.dataRegistro)
         dataToSend.dataRegistro = new Date(formData.dataRegistro).toISOString()
+
+      const hasConteudo = Object.keys(dataToSend).some(
+        (key) => key !== "alunoId" && key !== "dataRegistro",
+      )
+      if (!hasConteudo) {
+        showToast.error("Informe pelo menos uma medida ou uma observação.")
+        return
+      }
 
       await createHistorico.mutateAsync(dataToSend)
 
@@ -343,12 +352,12 @@ export const HistoricoForm: React.FC<HistoricoFormProps> = ({
               readOnly={autoCalcularComposicao}
             />
             <Input
-              label="Massa Muscular (kg)"
+              label="Massa magra estimada (kg)"
               type="number"
               step="0.1"
-              value={formData.massaMuscularKg}
+              value={formData.massaMagraKg}
               onChange={(e) =>
-                setFormData({ ...formData, massaMuscularKg: e.target.value })
+                setFormData({ ...formData, massaMagraKg: e.target.value })
               }
               placeholder="60.0"
               readOnly={autoCalcularComposicao}
@@ -363,7 +372,7 @@ export const HistoricoForm: React.FC<HistoricoFormProps> = ({
           onChange={(e) =>
             setFormData({ ...formData, observacoes: e.target.value })
           }
-          placeholder="Ex: Boa evolução, aumento de massa muscular visível..."
+          placeholder="Ex: Boa evolução, variação de massa magra estimada..."
         />
       </div>
 

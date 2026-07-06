@@ -37,8 +37,8 @@ const metricas: Record<MetricaEvolucao, MetricaConfig> = {
     unidade: "%",
     tendenciaPositiva: "menor",
   },
-  massaMuscularKg: {
-    label: "Massa Muscular (kg)",
+  massaMagraKg: {
+    label: "Massa magra estimada (kg)",
     unidade: "kg",
     tendenciaPositiva: "maior",
   },

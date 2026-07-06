@@ -36,7 +36,8 @@ export const TreinoDayNavigator: React.FC<TreinoDayNavigatorProps> = ({
   mobileMode = "menu",
 }) => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
-  const tabRefs = useRef<Record<string, HTMLButtonElement | null>>({})
+  const desktopTabRefs = useRef<Record<string, HTMLButtonElement | null>>({})
+  const mobileTabRefs = useRef<Record<string, HTMLButtonElement | null>>({})
   const fabButtonRef = useRef<HTMLButtonElement | null>(null)
   const closeButtonRef = useRef<HTMLButtonElement | null>(null)
 
@@ -75,6 +76,7 @@ export const TreinoDayNavigator: React.FC<TreinoDayNavigatorProps> = ({
   const handleTabKeyDown = (
     event: React.KeyboardEvent<HTMLButtonElement>,
     index: number,
+    viewport: "desktop" | "mobile",
   ) => {
     if (!["ArrowLeft", "ArrowRight", "Home", "End"].includes(event.key)) {
       return
@@ -102,7 +104,11 @@ export const TreinoDayNavigator: React.FC<TreinoDayNavigatorProps> = ({
     const nextDay = days[nextIndex]
     if (nextDay) {
       onSelectDay(nextDay.id)
-      window.requestAnimationFrame(() => tabRefs.current[nextDay.id]?.focus())
+      const targetRefs =
+        viewport === "desktop" ? desktopTabRefs : mobileTabRefs
+      window.requestAnimationFrame(() =>
+        targetRefs.current[nextDay.id]?.focus(),
+      )
     }
   }
 
@@ -112,6 +118,7 @@ export const TreinoDayNavigator: React.FC<TreinoDayNavigatorProps> = ({
         <div
           role="tablist"
           aria-label={label}
+          aria-orientation="horizontal"
           className="flex gap-2 overflow-x-auto pb-2"
         >
           {days.map((day, index) => {
@@ -120,7 +127,7 @@ export const TreinoDayNavigator: React.FC<TreinoDayNavigatorProps> = ({
               <button
                 key={day.id}
                 ref={(element) => {
-                  tabRefs.current[day.id] = element
+                  desktopTabRefs.current[day.id] = element
                 }}
                 type="button"
                 id={`${idPrefix}-tab-${day.id}`}
@@ -129,7 +136,9 @@ export const TreinoDayNavigator: React.FC<TreinoDayNavigatorProps> = ({
                 aria-controls={`${idPrefix}-panel-${day.id}`}
                 tabIndex={isSelected || (selectedIndex === -1 && index === 0) ? 0 : -1}
                 onClick={() => onSelectDay(day.id)}
-                onKeyDown={(event) => handleTabKeyDown(event, index)}
+                onKeyDown={(event) =>
+                  handleTabKeyDown(event, index, "desktop")
+                }
                 className={`shrink-0 rounded-lg border px-4 py-2 text-left transition-colors focus:outline-none focus:ring-2 focus:ring-[color:var(--student-border-strong)] ${
                   isSelected
                     ? "border-[color:var(--student-border-strong)] bg-[color:var(--student-info-surface)] text-[color:var(--student-text)]"
@@ -153,17 +162,31 @@ export const TreinoDayNavigator: React.FC<TreinoDayNavigatorProps> = ({
       {mobileMode === "inline" ? (
         <div className="md:hidden">
           <div
+            role="tablist"
             aria-label={label}
+            aria-orientation="horizontal"
             className="-mx-1 flex gap-2 overflow-x-auto px-1 pb-1"
           >
-            {days.map((day) => {
+            {days.map((day, index) => {
               const isSelected = day.id === selectedDayId
               return (
                 <button
                   key={day.id}
+                  ref={(element) => {
+                    mobileTabRefs.current[day.id] = element
+                  }}
                   type="button"
-                  aria-current={isSelected ? "true" : undefined}
+                  id={`${idPrefix}-mobile-tab-${day.id}`}
+                  role="tab"
+                  aria-selected={isSelected}
+                  aria-controls={`${idPrefix}-panel-${day.id}`}
+                  tabIndex={
+                    isSelected || (selectedIndex === -1 && index === 0) ? 0 : -1
+                  }
                   onClick={() => onSelectDay(day.id)}
+                  onKeyDown={(event) =>
+                    handleTabKeyDown(event, index, "mobile")
+                  }
                   className={[
                     "min-w-[11rem] flex-1 rounded-lg border px-3 py-3 text-left transition-colors focus:outline-none focus:ring-2 focus:ring-[color:var(--student-border-strong)]",
                     isSelected

@@ -15,7 +15,7 @@ import { BrandMark } from "../../components/BrandMark"
 import { useAuth } from "../../hooks/useAuth"
 import { type RegisterDTO } from "../../types"
 import { getStoredLeadSlug } from "../../utils/leadTracking"
-import { logError } from "../../utils/logError"
+import { showToast } from "../../utils/toast"
 import { legalApi } from "../../services/api"
 import { type LegalDocumentVersion } from "../../types"
 
@@ -109,6 +109,7 @@ export const RegisterPage: React.FC = () => {
   const handleSubmit = async () => {
     if (!validate()) return
 
+    setErrors((current) => ({ ...current, general: "" }))
     setIsLoading(true)
     try {
       const dataToSend: RegisterDTO = {
@@ -136,7 +137,10 @@ export const RegisterPage: React.FC = () => {
       await register(dataToSend)
       navigate("/login")
     } catch (error) {
-      logError("RegisterPage.handleSubmit", error)
+      const message =
+        error instanceof Error ? error.message : "Erro ao criar conta"
+      setErrors((current) => ({ ...current, general: message }))
+      showToast.error(message)
     } finally {
       setIsLoading(false)
     }
@@ -182,7 +186,12 @@ export const RegisterPage: React.FC = () => {
           </label>
         </div>
 
-        <div className="space-y-4">
+        <div
+          className="space-y-4"
+          onChange={() =>
+            setErrors((current) => ({ ...current, general: "" }))
+          }
+        >
           <Input
             label="Nome Completo *"
             icon={User}
@@ -405,6 +414,14 @@ export const RegisterPage: React.FC = () => {
           >
             {isLoading ? "Criando conta..." : "Criar Conta"}
           </Button>
+          {errors.general && (
+            <p
+              role="alert"
+              className="text-center text-sm text-[color:var(--student-danger)]"
+            >
+              {errors.general}
+            </p>
+          )}
         </div>
 
         <div className="mt-6 text-center">

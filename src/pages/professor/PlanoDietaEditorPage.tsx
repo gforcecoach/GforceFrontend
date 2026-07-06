@@ -1140,7 +1140,7 @@ export const PlanoDietaEditorPage: React.FC<PlanoDietaEditorPageProps> = ({
               key={day.localId}
               id={`dieta-day-panel-${day.localId}`}
               role="tabpanel"
-              aria-labelledby={`dieta-day-tab-${day.localId}`}
+              aria-label={`Dieta: ${day.titulo || "Dia sem título"}`}
               className={`border rounded-lg p-4 ${
                 selectedDayId === day.localId
                   ? "border-blue-400 bg-blue-950/30"

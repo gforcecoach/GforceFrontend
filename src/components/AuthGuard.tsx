@@ -1,4 +1,4 @@
-import React, { type ReactNode, useEffect } from "react"
+import React, { type ReactNode } from "react"
 import { Navigate, useLocation, useNavigate } from "react-router-dom"
 import { useAuth } from "../hooks/useAuth"
 import { type UserRole } from "../types"
@@ -19,12 +19,6 @@ export const AuthGuard: React.FC<AuthGuardProps> = ({
   const { isAuthenticated, isLoading, user, logout } = useAuth()
   const navigate = useNavigate()
   const location = useLocation()
-
-  useEffect(() => {
-    if (!isLoading && !isAuthenticated) {
-      console.log("🔒 Usuário não autenticado - redirecionando para login")
-    }
-  }, [isLoading, isAuthenticated])
 
   if (isLoading) {
     return (

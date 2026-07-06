@@ -22,12 +22,6 @@ export const InviteCodesPage: React.FC = () => {
   const [copiedCode, setCopiedCode] = useState<string | null>(null)
 
   const handleCreateCode = async () => {
-    console.log("🔧 Criando código...", {
-      selectedRole,
-      expiresInDays,
-      hasExpiration,
-    })
-
     try {
       const data: CreateInviteCodeDTO = {
         role: selectedRole,
@@ -42,18 +36,21 @@ export const InviteCodesPage: React.FC = () => {
       showToast.success(`Código ${newCode.code} criado com sucesso!`)
       setShowModal(false)
 
-      handleCopyCode(newCode.code)
+      void handleCopyCode(newCode.code)
     } catch (error: unknown) {
-      console.error("❌ Erro ao criar código:", error)
       showToast.error(error instanceof Error ? error.message : "Erro ao criar código")
     }
   }
 
-  const handleCopyCode = (code: string) => {
-    navigator.clipboard.writeText(code)
-    setCopiedCode(code)
-    showToast.success("Código copiado para área de transferência!")
-    setTimeout(() => setCopiedCode(null), 2000)
+  const handleCopyCode = async (code: string) => {
+    try {
+      await navigator.clipboard.writeText(code)
+      setCopiedCode(code)
+      showToast.success("Código copiado para área de transferência!")
+      window.setTimeout(() => setCopiedCode(null), 2000)
+    } catch {
+      showToast.error("Não foi possível copiar o código")
+    }
   }
 
   const handleOpenModal = () => {
@@ -81,24 +78,25 @@ export const InviteCodesPage: React.FC = () => {
   )
   const usedCodes = inviteCodes?.filter((c) => c.usedBy)
 
-  console.log("🔧 Render InviteCodesPage:", { showModal, isLoading })
-
   if (isLoading) {
     return <div className="text-center py-12 text-zinc-300">Carregando códigos...</div>
   }
 
   return (
     <div>
-      <div className="flex items-center justify-between mb-6">
-        <div className="flex items-center gap-4">
+      <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+        <div className="flex min-w-0 items-start gap-3 sm:items-center sm:gap-4">
           <button
+            type="button"
             onClick={() => navigate("/admin/dashboard")}
-            className="p-2 hover:bg-zinc-800 rounded-lg transition-colors"
+            className="shrink-0 rounded-lg p-2 transition-colors hover:bg-zinc-800 focus:outline-none focus:ring-2 focus:ring-zinc-300"
+            aria-label="Voltar ao dashboard"
+            title="Voltar"
           >
             <ArrowLeft className="h-5 w-5" />
           </button>
-          <div>
-            <h1 className="text-3xl font-bold text-white">
+          <div className="min-w-0">
+            <h1 className="text-2xl font-bold text-white sm:text-3xl">
               Códigos de Convite
             </h1>
             <p className="text-zinc-300 mt-1">
@@ -108,12 +106,16 @@ export const InviteCodesPage: React.FC = () => {
           </div>
         </div>
 
-        <Button icon={Plus} onClick={handleOpenModal}>
+        <Button
+          icon={Plus}
+          onClick={handleOpenModal}
+          className="w-full justify-center sm:w-auto"
+        >
           Gerar Novo Código
         </Button>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+      <div className="mb-8 grid grid-cols-1 gap-4 md:grid-cols-3 md:gap-6">
         <Card className="bg-emerald-950/40 border-emerald-500/30">
           <div className="flex items-center justify-between">
             <div>
@@ -155,11 +157,11 @@ export const InviteCodesPage: React.FC = () => {
         {inviteCodes && inviteCodes.length > 0 ? (
           inviteCodes.map((code) => (
             <Card key={code.id}>
-              <div className="flex items-start justify-between">
-                <div className="flex-1">
-                  <div className="flex items-center gap-3 mb-3">
-                    <Ticket className="h-5 w-5 text-blue-600" />
-                    <code className="text-lg font-mono font-bold text-white">
+              <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+                <div className="min-w-0 flex-1">
+                  <div className="mb-3 flex flex-wrap items-center gap-3">
+                    <Ticket className="h-5 w-5 shrink-0 text-blue-600" />
+                    <code className="min-w-0 break-all font-mono text-base font-bold text-white sm:text-lg">
                       {code.code}
                     </code>
                     {getStatusBadge(code)}
@@ -208,8 +210,12 @@ export const InviteCodesPage: React.FC = () => {
                   <Button
                     variant="secondary"
                     icon={copiedCode === code.code ? Check : Copy}
-                    onClick={() => handleCopyCode(code.code)}
-                    className={copiedCode === code.code ? "!bg-emerald-950/40 !border-emerald-500/30 !text-emerald-200" : ""}
+                    onClick={() => void handleCopyCode(code.code)}
+                    className={`w-full justify-center sm:w-auto ${
+                      copiedCode === code.code
+                        ? "!border-emerald-500/30 !bg-emerald-950/40 !text-emerald-200"
+                        : ""
+                    }`}
                   >
                     {copiedCode === code.code ? "Copiado!" : "Copiar"}
                   </Button>
@@ -239,10 +245,15 @@ export const InviteCodesPage: React.FC = () => {
           onClick={handleCloseModal}
         >
           <div
-            className="bg-zinc-900 border border-zinc-700 rounded-lg shadow-xl w-full max-w-md p-6"
+            className="w-full max-w-md rounded-lg border border-zinc-700 bg-zinc-900 p-6 shadow-xl"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="invite-code-dialog-title"
             onClick={(e) => e.stopPropagation()}
           >
-            <h2 className="text-2xl font-bold text-white mb-6">Gerar Código de Convite</h2>
+            <h2 id="invite-code-dialog-title" className="mb-6 text-2xl font-bold text-white">
+              Gerar Código de Convite
+            </h2>
 
             <div className="space-y-6">
               <div>
@@ -340,7 +351,7 @@ export const InviteCodesPage: React.FC = () => {
               </div>
             </div>
 
-            <div className="flex gap-3 mt-8">
+            <div className="mt-8 flex flex-col-reverse gap-3 sm:flex-row">
               <Button
                 onClick={handleCreateCode}
                 isLoading={createInviteCode.isLoading}
