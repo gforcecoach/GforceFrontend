@@ -125,6 +125,17 @@ export interface DataSubjectRequest {
   updatedAt: string
 }
 
+export interface AdminDataSubjectRequest extends DataSubjectRequest {
+  user: Pick<User, "id" | "nome" | "email" | "role"> & {
+    blockedAt?: string | null
+  }
+}
+
+export interface ProcessDataSubjectRequestDTO {
+  status: DataSubjectRequestStatus
+  response?: string
+}
+
 export type OnboardingStatus =
   | "NOT_STARTED"
   | "IN_PROGRESS"

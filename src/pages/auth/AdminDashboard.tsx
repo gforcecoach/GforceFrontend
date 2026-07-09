@@ -9,6 +9,7 @@ import {
   Link2,
   MousePointerClick,
   Wallet,
+  ShieldCheck,
 } from "lucide-react"
 import { Card, Button } from "../../components/ui"
 import { useAlunos } from "../../hooks/useAlunos"
@@ -275,6 +276,17 @@ export const AdminDashboard: React.FC = () => {
             <h3 className="font-semibold text-zinc-100">Controle Financeiro</h3>
             <p className="text-sm text-zinc-400">
               Caixa mensal, projeção 3/6 meses e lançamentos
+            </p>
+          </button>
+
+          <button
+            onClick={() => navigate("/admin/lgpd")}
+            className="p-4 border-2 border-zinc-700 bg-zinc-900 rounded-lg hover:border-sky-400 hover:bg-sky-500/10 transition-colors text-left"
+          >
+            <ShieldCheck className="h-6 w-6 text-sky-300 mb-2" />
+            <h3 className="font-semibold text-zinc-100">Solicitações LGPD</h3>
+            <p className="text-sm text-zinc-400">
+              Processar pedidos de titulares e registrar respostas
             </p>
           </button>
         </div>

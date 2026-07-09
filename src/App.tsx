@@ -31,6 +31,7 @@ import { LeadLinksPage } from "./pages/admin/LeadLinksPage"
 import { ProfessoresPage } from "./pages/admin/ProfessoresPage"
 import { ProfessorForm } from "./pages/admin/ProfessorForm"
 import { FinanceiroPage } from "./pages/admin/FinanceiroPage"
+import { PrivacyRequestsPage } from "./pages/admin/PrivacyRequestsPage"
 
 // Professor Pages
 import { ProfessorHomeDashboardPage } from "./pages/professor/ProfessorHomeDashboardPage"
@@ -141,6 +142,7 @@ function AppRoutes() {
                   <Route path="invite-codes" element={<InviteCodesPage />} />
                   <Route path="lead-links" element={<LeadLinksPage />} />
                   <Route path="financeiro" element={<FinanceiroPage />} />
+                  <Route path="lgpd" element={<PrivacyRequestsPage />} />
                   <Route path="privacidade" element={<PrivacySettingsPage />} />
                   <Route path="professores" element={<ProfessoresPage />} />
                   <Route path="professores/new" element={<ProfessorForm />} />

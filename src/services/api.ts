@@ -43,6 +43,8 @@ import {
   type PrivacyPreferencesInput,
   type DataSubjectRequest,
   type DataSubjectRequestType,
+  type AdminDataSubjectRequest,
+  type ProcessDataSubjectRequestDTO,
   type OnboardingResponse,
   type OnboardingState,
   type ArquivoAluno,
@@ -435,6 +437,24 @@ export const privacyApi = {
 
   exportData: async (): Promise<unknown> => {
     const response = await api.get<unknown>("/privacy/export")
+    return response.data
+  },
+
+  listAdminRequests: async (): Promise<AdminDataSubjectRequest[]> => {
+    const response = await api.get<AdminDataSubjectRequest[]>(
+      "/privacy/admin/requests",
+    )
+    return response.data
+  },
+
+  processAdminRequest: async (
+    id: string,
+    data: ProcessDataSubjectRequestDTO,
+  ): Promise<DataSubjectRequest> => {
+    const response = await api.patch<DataSubjectRequest>(
+      `/privacy/admin/requests/${id}`,
+      data,
+    )
     return response.data
   },
 }
