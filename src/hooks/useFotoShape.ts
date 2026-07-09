@@ -1,5 +1,5 @@
 import { useState } from "react"
-import axios from "axios"
+import { api } from "../services/api"
 
 interface FotoShape {
   id: string
@@ -10,12 +10,13 @@ interface FotoShape {
   createdAt: string
 }
 
-export function useFotoShape(token: string) {
+const getErrorMessage = (error: unknown, fallback: string) =>
+  error instanceof Error ? error.message : fallback
+
+export function useFotoShape() {
   const [fotos, setFotos] = useState<FotoShape[]>([])
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
-
-  const baseURL = import.meta.env.VITE_API_URL
 
   const upload = async (file: File, descricao?: string) => {
     setLoading(true)
@@ -26,24 +27,14 @@ export function useFotoShape(token: string) {
       formData.append("file", file)
       if (descricao) formData.append("descricao", descricao)
 
-      const { data } = await axios.post<FotoShape>(
-        `${baseURL}/fotos-shape`,
-        formData,
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        },
-      )
+      const { data } = await api.post<FotoShape>("/fotos-shape", formData)
 
       setFotos((prev) => [data, ...prev])
       return data
     } catch (err) {
-      const msg = axios.isAxiosError(err)
-        ? err.response?.data?.error || "Erro desconhecido"
-        : "Erro de rede"
-      setError(msg)
-      throw new Error(msg)
+      const message = getErrorMessage(err, "Erro ao enviar foto")
+      setError(message)
+      throw new Error(message)
     } finally {
       setLoading(false)
     }
@@ -54,18 +45,13 @@ export function useFotoShape(token: string) {
     setError(null)
 
     try {
-      const { data } = await axios.get<FotoShape[]>(
-        `${baseURL}/fotos-shape/aluno/${alunoId}`,
-        {
-          headers: { Authorization: `Bearer ${token}` },
-        },
+      const { data } = await api.get<FotoShape[]>(
+        `/fotos-shape/aluno/${alunoId}`,
       )
       setFotos(data)
     } catch (err) {
-      const msg = axios.isAxiosError(err)
-        ? err.response?.data?.error || "Erro desconhecido"
-        : "Erro de rede"
-      setError(msg)
+      const message = getErrorMessage(err, "Erro ao carregar fotos")
+      setError(message)
     } finally {
       setLoading(false)
     }
@@ -76,16 +62,12 @@ export function useFotoShape(token: string) {
     setError(null)
 
     try {
-      await axios.delete(`${baseURL}/fotos-shape/${id}`, {
-        headers: { Authorization: `Bearer ${token}` },
-      })
-      setFotos((prev) => prev.filter((f) => f.id !== id))
+      await api.delete(`/fotos-shape/${id}`)
+      setFotos((prev) => prev.filter((foto) => foto.id !== id))
     } catch (err) {
-      const msg = axios.isAxiosError(err)
-        ? err.response?.data?.error || "Erro desconhecido"
-        : "Erro de rede"
-      setError(msg)
-      throw new Error(msg)
+      const message = getErrorMessage(err, "Erro ao excluir foto")
+      setError(message)
+      throw new Error(message)
     } finally {
       setLoading(false)
     }

@@ -693,6 +693,21 @@ export interface UpdateAlunoStatusDTO {
   ativo: boolean
 }
 
+export type TipoArquivoAluno = "TREINO" | "DIETA"
+
+export interface ArquivoAluno {
+  id: string
+  alunoId: string
+  professorId: string
+  tipo: TipoArquivoAluno
+  titulo: string
+  descricao?: string | null
+  url: string
+  publicId: string
+  createdAt: string
+  updatedAt: string
+}
+
 export interface UserAnswer {
   id: string
   createdAt: string

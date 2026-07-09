@@ -45,6 +45,8 @@ import {
   type DataSubjectRequestType,
   type OnboardingResponse,
   type OnboardingState,
+  type ArquivoAluno,
+  type TipoArquivoAluno,
 } from "../types"
 
 export const api = axios.create({
@@ -542,6 +544,41 @@ export const professoresApi = {
 
   delete: async (id: string): Promise<void> => {
     await api.delete(`/professores/${id}`)
+  },
+}
+
+export interface UploadArquivoAlunoDTO {
+  alunoId: string
+  tipo: TipoArquivoAluno
+  titulo: string
+  descricao?: string
+  file: File
+}
+
+export const arquivosAlunoApi = {
+  listByAluno: async (alunoId: string): Promise<ArquivoAluno[]> => {
+    const response = await api.get<ArquivoAluno[]>(
+      `/arquivos-aluno/aluno/${alunoId}`,
+    )
+    return response.data
+  },
+
+  upload: async (data: UploadArquivoAlunoDTO): Promise<ArquivoAluno> => {
+    const formData = new FormData()
+    formData.append("alunoId", data.alunoId)
+    formData.append("tipo", data.tipo)
+    formData.append("titulo", data.titulo)
+    if (data.descricao) {
+      formData.append("descricao", data.descricao)
+    }
+    formData.append("file", data.file)
+
+    const response = await api.post<ArquivoAluno>("/arquivos-aluno", formData)
+    return response.data
+  },
+
+  delete: async (id: string): Promise<void> => {
+    await api.delete(`/arquivos-aluno/${id}`)
   },
 }
 
