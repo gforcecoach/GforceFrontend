@@ -24,6 +24,7 @@ import { type CreateAlunoDTO, type UpdateAlunoDTO } from "../types"
 import { showToast } from "../utils/toast"
 import { logError } from "../utils/logError"
 import { useAuth } from "../hooks/useAuth"
+import { PASSWORD_MIN_LENGTH, PASSWORD_MIN_LENGTH_MESSAGE } from "../utils/passwordPolicy"
 
 const initialFormState = {
   nome: "",
@@ -54,6 +55,20 @@ const measurementInstructionLinks = [
     href: "https://www.youtube.com/watch?v=qHCtSaETaXc",
   },
 ]
+
+const parseCommaSeparatedList = (value: string) =>
+  value
+    .split(",")
+    .map((item) => item.trim())
+    .filter(Boolean)
+
+const nullableText = (value: string) => {
+  const trimmed = value.trim()
+  return trimmed || null
+}
+
+const nullableNumber = (value: string) =>
+  value.trim() ? Number(value) : null
 
 interface AnswerFormProps {
   embeddedInStudentContext?: boolean
@@ -155,8 +170,8 @@ export const AnswerForm: React.FC<AnswerFormProps> = ({
 
       if (isCreating && !formData.password) {
         newErrors.password = "Senha é obrigatória"
-      } else if (formData.password && formData.password.length < 6) {
-        newErrors.password = "Senha deve ter pelo menos 6 caracteres"
+      } else if (formData.password && formData.password.length < PASSWORD_MIN_LENGTH) {
+        newErrors.password = PASSWORD_MIN_LENGTH_MESSAGE
       }
 
       if (isCreating && isAdmin && !formData.professorId) {
@@ -215,61 +230,31 @@ export const AnswerForm: React.FC<AnswerFormProps> = ({
           if (formData.password) dataToSend.password = formData.password
         }
 
-        if (formData.telefone.trim())
-          dataToSend.telefone = formData.telefone.trim()
-        if (formData.sexoBiologico)
-          dataToSend.sexoBiologico = formData.sexoBiologico as
-            | "MASCULINO"
-            | "FEMININO"
-        if (formData.alturaCm) dataToSend.alturaCm = Number(formData.alturaCm)
-        if (formData.pesoKg) dataToSend.pesoKg = Number(formData.pesoKg)
-        if (formData.idade) dataToSend.idade = Number(formData.idade)
-        if (formData.cinturaCm)
-          dataToSend.cinturaCm = Number(formData.cinturaCm)
-        if (formData.quadrilCm)
-          dataToSend.quadrilCm = Number(formData.quadrilCm)
-        if (formData.pescocoCm)
-          dataToSend.pescocoCm = Number(formData.pescocoCm)
-        if (formData.dias_treino_semana)
-          dataToSend.dias_treino_semana = Number(formData.dias_treino_semana)
-        if (formData.dores_articulares.trim())
-          dataToSend.dores_articulares = formData.dores_articulares.trim()
-        if (formData.frequencia_horarios_refeicoes.trim())
-          dataToSend.frequencia_horarios_refeicoes =
-            formData.frequencia_horarios_refeicoes.trim()
-        if (formData.objetivos_atuais.trim())
-          dataToSend.objetivos_atuais = formData.objetivos_atuais.trim()
-        if (tomaRemedio !== null) dataToSend.toma_remedio = tomaRemedio
-        if (tomaRemedio === true && remediosUso.trim())
-          dataToSend.remedios_uso = remediosUso.trim()
-
-        const alimentosDiarioArray = alimentosDiario
-          .split(",")
-          .map((s) => s.trim())
-          .filter(Boolean)
-        if (alimentosDiarioArray.length > 0)
-          dataToSend.alimentos_quer_diario = alimentosDiarioArray
-
-        const alimentosNaoComeArray = alimentosNaoCome
-          .split(",")
-          .map((s) => s.trim())
-          .filter(Boolean)
-        if (alimentosNaoComeArray.length > 0)
-          dataToSend.alimentos_nao_comem = alimentosNaoComeArray
-
-        const alergiasArray = alergias
-          .split(",")
-          .map((s) => s.trim())
-          .filter(Boolean)
-        if (alergiasArray.length > 0)
-          dataToSend.alergias_alimentares = alergiasArray
-
-        const suplementosArray = suplementos
-          .split(",")
-          .map((s) => s.trim())
-          .filter(Boolean)
-        if (suplementosArray.length > 0)
-          dataToSend.suplementos_consumidos = suplementosArray
+        dataToSend.telefone = nullableText(formData.telefone)
+        dataToSend.sexoBiologico = formData.sexoBiologico
+          ? (formData.sexoBiologico as "MASCULINO" | "FEMININO")
+          : null
+        dataToSend.alturaCm = nullableNumber(formData.alturaCm)
+        dataToSend.pesoKg = nullableNumber(formData.pesoKg)
+        dataToSend.idade = nullableNumber(formData.idade)
+        dataToSend.cinturaCm = nullableNumber(formData.cinturaCm)
+        dataToSend.quadrilCm = nullableNumber(formData.quadrilCm)
+        dataToSend.pescocoCm = nullableNumber(formData.pescocoCm)
+        dataToSend.dias_treino_semana = nullableNumber(
+          formData.dias_treino_semana,
+        )
+        dataToSend.dores_articulares = nullableText(formData.dores_articulares)
+        dataToSend.frequencia_horarios_refeicoes = nullableText(
+          formData.frequencia_horarios_refeicoes,
+        )
+        dataToSend.objetivos_atuais = nullableText(formData.objetivos_atuais)
+        dataToSend.toma_remedio = tomaRemedio
+        dataToSend.remedios_uso =
+          tomaRemedio === true ? nullableText(remediosUso) : null
+        dataToSend.alimentos_quer_diario = parseCommaSeparatedList(alimentosDiario)
+        dataToSend.alimentos_nao_comem = parseCommaSeparatedList(alimentosNaoCome)
+        dataToSend.alergias_alimentares = parseCommaSeparatedList(alergias)
+        dataToSend.suplementos_consumidos = parseCommaSeparatedList(suplementos)
 
         const alunoId = isAluno ? existingAluno?.id : id
 

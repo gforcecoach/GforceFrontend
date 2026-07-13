@@ -8,7 +8,7 @@ export interface AuthContextData {
   isLoading: boolean
   login: (data: LoginDTO) => Promise<void>
   register: (data: RegisterDTO) => Promise<void>
-  logout: () => void
+  logout: () => Promise<void>
   updateUser: (user: User) => void
 }
 

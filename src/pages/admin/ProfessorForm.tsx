@@ -19,6 +19,7 @@ import {
 } from "../../hooks/useProfessores"
 import type { CreateProfessorDTO, UpdateProfessorDTO } from "../../types"
 import { showToast } from "../../utils/toast"
+import { PASSWORD_MIN_LENGTH, PASSWORD_MIN_LENGTH_MESSAGE } from "../../utils/passwordPolicy"
 
 const initialFormState = {
   nome: "",
@@ -71,8 +72,8 @@ export const ProfessorForm: React.FC = () => {
 
     if (!isEdit && !formData.password) {
       newErrors.password = "Senha é obrigatória"
-    } else if (formData.password && formData.password.length < 6) {
-      newErrors.password = "Senha deve ter pelo menos 6 caracteres"
+    } else if (formData.password && formData.password.length < PASSWORD_MIN_LENGTH) {
+      newErrors.password = PASSWORD_MIN_LENGTH_MESSAGE
     }
 
     setErrors(newErrors)

@@ -18,6 +18,7 @@ import { getStoredLeadSlug } from "../../utils/leadTracking"
 import { showToast } from "../../utils/toast"
 import { legalApi } from "../../services/api"
 import { type LegalDocumentVersion } from "../../types"
+import { PASSWORD_MIN_LENGTH, PASSWORD_MIN_LENGTH_MESSAGE } from "../../utils/passwordPolicy"
 
 export const RegisterPage: React.FC = () => {
   const navigate = useNavigate()
@@ -86,8 +87,8 @@ export const RegisterPage: React.FC = () => {
 
     if (!formData.password) {
       newErrors.password = "Senha é obrigatória"
-    } else if (formData.password.length < 10) {
-      newErrors.password = "Senha deve ter pelo menos 10 caracteres"
+    } else if (formData.password.length < PASSWORD_MIN_LENGTH) {
+      newErrors.password = PASSWORD_MIN_LENGTH_MESSAGE
     }
 
     if (formData.password !== confirmPassword) {

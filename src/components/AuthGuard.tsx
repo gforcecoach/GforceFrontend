@@ -19,6 +19,20 @@ export const AuthGuard: React.FC<AuthGuardProps> = ({
   const { isAuthenticated, isLoading, user, logout } = useAuth()
   const navigate = useNavigate()
   const location = useLocation()
+  const [isLoggingOut, setIsLoggingOut] = React.useState(false)
+
+  const handleLogout = async () => {
+    if (isLoggingOut) return
+
+    setIsLoggingOut(true)
+
+    try {
+      await logout()
+      navigate("/login", { replace: true })
+    } catch {
+      setIsLoggingOut(false)
+    }
+  }
 
   if (isLoading) {
     return (
@@ -62,10 +76,8 @@ export const AuthGuard: React.FC<AuthGuardProps> = ({
               <Button
                 variant="secondary"
                 icon={LogOut}
-                onClick={() => {
-                  logout()
-                  navigate("/login")
-                }}
+                onClick={handleLogout}
+                isLoading={isLoggingOut}
                 className="w-full"
               >
                 Sair da Conta

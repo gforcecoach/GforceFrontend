@@ -111,10 +111,19 @@ export const Layout: React.FC<{ children: React.ReactNode }> = ({
   const navigate = useNavigate()
   const location = useLocation()
   const { user, logout } = useAuth()
+  const [isLoggingOut, setIsLoggingOut] = React.useState(false)
 
-  const handleLogout = () => {
-    logout()
-    navigate("/login")
+  const handleLogout = async () => {
+    if (isLoggingOut) return
+
+    setIsLoggingOut(true)
+
+    try {
+      await logout()
+      navigate("/login", { replace: true })
+    } catch {
+      setIsLoggingOut(false)
+    }
   }
 
   const isAluno = user?.role === "ALUNO"
@@ -273,6 +282,7 @@ export const Layout: React.FC<{ children: React.ReactNode }> = ({
                 variant="secondary"
                 icon={LogOut}
                 onClick={handleLogout}
+                isLoading={isLoggingOut}
                 className={mobileTopbarButtonClass}
                 title="Sair"
                 aria-label="Sair"

@@ -290,7 +290,7 @@ export const GraficoEvolucao: React.FC<GraficoEvolucaoProps> = ({
     .join(" ")
   const areaPath =
     pontosGrafico.length > 1
-      ? `M ${pontosGrafico[0].x} 100 L ${linePoints.replaceAll(",", " ")} L ${
+      ? `M ${pontosGrafico[0].x} 100 L ${linePoints.replace(/,/g, " ")} L ${
           pontosGrafico[pontosGrafico.length - 1].x
         } 100 Z`
       : ""

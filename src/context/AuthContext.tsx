@@ -11,6 +11,7 @@ import {
   AUTH_SESSION_EXPIRED_EVENT,
   AUTH_SESSION_REFRESHED_EVENT,
   authApi,
+  clearAccessToken,
   setAccessToken,
 } from "../services/api"
 import { showToast } from "../utils/toast"
@@ -45,7 +46,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       })
       .catch(() => {
         if (!active) return
-        setAccessToken(null)
+        clearAccessToken()
         setToken(null)
         setUser(null)
       })
@@ -63,7 +64,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const clearAuthState = useCallback(() => {
     setToken(null)
     setUser(null)
-    setAccessToken(null)
+    clearAccessToken()
   }, [])
 
   useEffect(() => {
@@ -133,11 +134,23 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     }
   }, [])
 
-  const logout = useCallback(() => {
-    void authApi.logout().catch(() => {})
-    sessionExpiredNotifiedRef.current = false
-    clearAuthState()
-    showToast.success("Logout realizado")
+  const logout = useCallback(async () => {
+    try {
+      await authApi.logout()
+      sessionExpiredNotifiedRef.current = false
+      clearAuthState()
+      showToast.success("Logout realizado")
+    } catch (error) {
+      showToast.error(
+        "Não foi possível confirmar o logout. Tente novamente.",
+      )
+
+      if (error instanceof Error) {
+        throw error
+      }
+
+      throw new Error("Não foi possível confirmar o logout")
+    }
   }, [clearAuthState])
 
   const updateUser = useCallback((updatedUser: User) => {

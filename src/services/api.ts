@@ -22,9 +22,6 @@ import {
   type UpdateAlunoDTO,
   type UpdateAlunoStatusDTO,
   type ApiError,
-  type UserAnswer,
-  type CreateUserAnswerDTO,
-  type UpdateUserAnswerDTO,
   type YoutubeLatestContentResponse,
   type FinanceDashboardResponse,
   type FinanceRenewal,
@@ -92,10 +89,7 @@ const removeContentTypeHeader = (headers: AxiosRequestConfig["headers"]) => {
 const cleanPayload = <T extends object>(data: T): Record<string, unknown> =>
   Object.entries(data as Record<string, unknown>).reduce(
     (acc, [key, value]) => {
-      if (value !== undefined && value !== "" && value !== null) {
-        if (Array.isArray(value) && value.length === 0) {
-          return acc
-        }
+      if (value !== undefined) {
         acc[key] = value
       }
       return acc
@@ -105,22 +99,40 @@ const cleanPayload = <T extends object>(data: T): Record<string, unknown> =>
 
 let isRedirecting = false
 let accessToken: string | null = null
+let authSessionGeneration = 0
+let isLogoutInProgress = false
+
+const LOGOUT_IN_PROGRESS_MESSAGE = "Logout em andamento."
+const STALE_AUTH_REFRESH_MESSAGE = "Sessao encerrada antes da renovacao."
+
+const isAuthRefreshSuppressedError = (error: unknown) =>
+  error instanceof Error &&
+  (error.message === LOGOUT_IN_PROGRESS_MESSAGE ||
+    error.message === STALE_AUTH_REFRESH_MESSAGE)
 
 export const setAccessToken = (token: string | null) => {
   accessToken = token
 }
 
-const clearAuth = () => {
+export const clearAccessToken = () => {
+  authSessionGeneration += 1
   setAccessToken(null)
 }
 
+const clearAuth = () => {
+  clearAccessToken()
+}
+
 const storeAuth = (session: LoginResponse) => {
+  if (isLogoutInProgress) return false
+
   setAccessToken(session.token)
   window.dispatchEvent(
     new CustomEvent<LoginResponse>(AUTH_SESSION_REFRESHED_EVENT, {
       detail: session,
     }),
   )
+  return true
 }
 
 const notifySessionExpired = () => {
@@ -130,10 +142,26 @@ const notifySessionExpired = () => {
 let refreshSessionPromise: Promise<LoginResponse> | null = null
 
 const refreshSession = async (): Promise<LoginResponse> => {
+  if (isLogoutInProgress) {
+    return Promise.reject(new Error(LOGOUT_IN_PROGRESS_MESSAGE))
+  }
+
   if (!refreshSessionPromise) {
+    const refreshGeneration = authSessionGeneration
+
     refreshSessionPromise = api
       .post<LoginResponse>("/auth/refresh")
-      .then((response) => response.data)
+      .then((response) => {
+        if (isLogoutInProgress) {
+          throw new Error(LOGOUT_IN_PROGRESS_MESSAGE)
+        }
+
+        if (refreshGeneration !== authSessionGeneration) {
+          throw new Error(STALE_AUTH_REFRESH_MESSAGE)
+        }
+
+        return response.data
+      })
       .finally(() => {
         refreshSessionPromise = null
       })
@@ -230,11 +258,19 @@ api.interceptors.response.use(
 
         try {
           const refreshedSession = await refreshSession()
-          storeAuth(refreshedSession)
+
+          if (!storeAuth(refreshedSession)) {
+            return Promise.reject(new Error(STALE_AUTH_REFRESH_MESSAGE))
+          }
+
           originalRequest.headers = originalRequest.headers || {}
           originalRequest.headers.Authorization = `Bearer ${refreshedSession.token}`
           return api(originalRequest)
-        } catch {
+        } catch (refreshError) {
+          if (isAuthRefreshSuppressedError(refreshError)) {
+            return Promise.reject(refreshError)
+          }
+
           redirectToPublicEntry()
           return Promise.reject(
             new Error("Sessão expirada. Faça login novamente."),
@@ -374,7 +410,15 @@ export const authApi = {
   },
 
   logout: async (): Promise<void> => {
-    await api.post("/auth/logout")
+    isLogoutInProgress = true
+
+    try {
+      await api.post("/auth/logout")
+      clearAuth()
+    } finally {
+      refreshSessionPromise = null
+      isLogoutInProgress = false
+    }
   },
 }
 
@@ -599,37 +643,6 @@ export const arquivosAlunoApi = {
 
   delete: async (id: string): Promise<void> => {
     await api.delete(`/arquivos-aluno/${id}`)
-  },
-}
-
-export const answersApi = {
-  getAll: async (): Promise<UserAnswer[]> => {
-    const response = await api.get<UserAnswer[]>("/answers")
-    return response.data
-  },
-
-  getById: async (id: string): Promise<UserAnswer> => {
-    const response = await api.get<UserAnswer>(`/answers/${id}`)
-    return response.data
-  },
-
-  create: async (data: CreateUserAnswerDTO): Promise<UserAnswer> => {
-    const response = await api.post<UserAnswer>("/answers", data)
-    return response.data
-  },
-
-  update: async (id: string, data: UpdateUserAnswerDTO): Promise<UserAnswer> => {
-    const response = await api.put<UserAnswer>(`/answers/${id}`, data)
-    return response.data
-  },
-
-  delete: async (id: string): Promise<void> => {
-    await api.delete(`/answers/${id}`)
-  },
-
-  healthCheck: async (): Promise<{ status: string }> => {
-    const response = await api.get<{ status: string }>("/health")
-    return response.data
   },
 }
 

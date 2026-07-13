@@ -3,6 +3,11 @@ import { AlertCircle, ArrowLeft, Eye, EyeOff, KeyRound, Lock } from "lucide-reac
 import { authApi } from "../services/api"
 import { showToast } from "../utils/toast"
 import { Button, Input } from "./ui"
+import {
+  NEW_PASSWORD_MIN_LENGTH_MESSAGE,
+  PASSWORD_MAX_LENGTH,
+  PASSWORD_MIN_LENGTH,
+} from "../utils/passwordPolicy"
 
 interface PasswordResetFormProps {
   token: string
@@ -21,8 +26,8 @@ export function PasswordResetForm({ token, onBack }: PasswordResetFormProps) {
     event.preventDefault()
     setError("")
 
-    if (newPassword.length < 10) {
-      setError("A nova senha deve ter pelo menos 10 caracteres.")
+    if (newPassword.length < PASSWORD_MIN_LENGTH) {
+      setError(NEW_PASSWORD_MIN_LENGTH_MESSAGE)
       return
     }
 
@@ -75,8 +80,8 @@ export function PasswordResetForm({ token, onBack }: PasswordResetFormProps) {
               setError("")
             }}
             autoComplete="new-password"
-            minLength={10}
-            maxLength={128}
+            minLength={PASSWORD_MIN_LENGTH}
+            maxLength={PASSWORD_MAX_LENGTH}
             className="pr-12"
           />
           <button
@@ -104,8 +109,8 @@ export function PasswordResetForm({ token, onBack }: PasswordResetFormProps) {
               setError("")
             }}
             autoComplete="new-password"
-            minLength={10}
-            maxLength={128}
+            minLength={PASSWORD_MIN_LENGTH}
+            maxLength={PASSWORD_MAX_LENGTH}
             className="pr-12"
           />
           <button
