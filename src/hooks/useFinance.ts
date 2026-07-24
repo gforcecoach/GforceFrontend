@@ -81,6 +81,7 @@ export const useCreateFinanceRenewal = (): UseMutationResult<
     {
       onSuccess: (created) => {
         queryClient.invalidateQueries("financeDashboard")
+        queryClient.invalidateQueries("professorFinanceDashboard")
         queryClient.invalidateQueries(["financeRenewals", created.month])
         showToast.success("Renovação registrada com sucesso")
       },
@@ -105,6 +106,7 @@ export const useUpdateFinanceRenewal = (): UseMutationResult<
   >(({ id, data }) => financeApi.updateRenewal(id, data), {
     onSuccess: (updated) => {
       queryClient.invalidateQueries("financeDashboard")
+      queryClient.invalidateQueries("professorFinanceDashboard")
       queryClient.invalidateQueries(["financeRenewals", updated.month])
       showToast.success("Renovação atualizada")
     },
@@ -120,6 +122,7 @@ export const useDeleteFinanceRenewal = (): UseMutationResult<void, Error, string
   return useMutation<void, Error, string>((id) => financeApi.deleteRenewal(id), {
     onSuccess: () => {
       queryClient.invalidateQueries("financeDashboard")
+      queryClient.invalidateQueries("professorFinanceDashboard")
       queryClient.invalidateQueries("financeRenewals")
       showToast.success("Renovação removida")
     },
@@ -141,6 +144,7 @@ export const useCreateFinanceEntry = (): UseMutationResult<
     {
       onSuccess: (created) => {
         queryClient.invalidateQueries("financeDashboard")
+        queryClient.invalidateQueries("professorFinanceDashboard")
         queryClient.invalidateQueries(["financeEntries", created.month])
         showToast.success("Lançamento criado")
       },
@@ -163,6 +167,7 @@ export const useUpdateFinanceEntry = (): UseMutationResult<
     {
       onSuccess: (updated) => {
         queryClient.invalidateQueries("financeDashboard")
+        queryClient.invalidateQueries("professorFinanceDashboard")
         queryClient.invalidateQueries(["financeEntries", updated.month])
         showToast.success("Lançamento atualizado")
       },
@@ -179,6 +184,7 @@ export const useDeleteFinanceEntry = (): UseMutationResult<void, Error, string> 
   return useMutation<void, Error, string>((id) => financeApi.deleteEntry(id), {
     onSuccess: () => {
       queryClient.invalidateQueries("financeDashboard")
+      queryClient.invalidateQueries("professorFinanceDashboard")
       queryClient.invalidateQueries("financeEntries")
       showToast.success("Lançamento removido")
     },
@@ -194,6 +200,7 @@ export const useCloseFinanceMonth = (): UseMutationResult<FinanceMonthState, Err
   return useMutation<FinanceMonthState, Error, string>((month) => financeApi.closeMonth(month), {
     onSuccess: () => {
       queryClient.invalidateQueries("financeDashboard")
+      queryClient.invalidateQueries("professorFinanceDashboard")
       queryClient.invalidateQueries("financeRenewals")
       queryClient.invalidateQueries("financeEntries")
       showToast.success("Mês fechado com sucesso")
@@ -210,6 +217,7 @@ export const useReopenFinanceMonth = (): UseMutationResult<FinanceMonthState, Er
   return useMutation<FinanceMonthState, Error, string>((month) => financeApi.reopenMonth(month), {
     onSuccess: () => {
       queryClient.invalidateQueries("financeDashboard")
+      queryClient.invalidateQueries("professorFinanceDashboard")
       queryClient.invalidateQueries("financeRenewals")
       queryClient.invalidateQueries("financeEntries")
       showToast.success("Mês reaberto com sucesso")
